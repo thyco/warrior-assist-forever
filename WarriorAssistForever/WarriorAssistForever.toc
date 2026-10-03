@@ -1,0 +1,16 @@
+## Interface: 16001
+## Title: Warrior Assist Forever
+## Notes: Battle Shout reminder for Warriors.
+## Author: Warrior Assist Forever
+## Version: 0.1.0
+## OptionalDeps: LibCustomGlow-1.0
+## SavedVariables: WarriorAssistForeverDB
+
+Libs/LibStub/LibStub.lua
+Libs/LibCustomGlow-1.0/LibCustomGlow-1.0.lua
+
+Core.lua
+Services/Config.lua
+Services/Client.lua
+Services/Timers.lua
+Services/Glow.lua
