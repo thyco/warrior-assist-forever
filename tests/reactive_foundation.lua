@@ -8,6 +8,7 @@ local world = H.new()
 local addon = load(world)
 
 addon.Config.Initialize()
+
 H.equal(addon.Config.Get("overpowerEnabled"), true)
 H.equal(addon.Config.Get("overpowerBar"), 0)
 H.equal(addon.Config.Get("overpowerButton"), 1)
@@ -26,6 +27,7 @@ saved.env.WarriorAssistForeverDB = {
     revengeButton = 3,
 }
 local savedAddon = load(saved)
+
 savedAddon.Config.Initialize()
 
 H.equal(savedAddon.Config.Get("overpowerEnabled"), false)
@@ -47,6 +49,7 @@ invalid.env.WarriorAssistForeverDB = {
     revengeButton = "4",
 }
 local invalidAddon = load(invalid)
+
 invalidAddon.Config.Initialize()
 
 H.equal(invalidAddon.Config.Get("overpowerBar"), 0)
@@ -81,27 +84,40 @@ end
 
 local selected = world.env.ActionButton1
 world.env.CURRENT_ACTIONBAR_PAGE = 2
+
 H.equal(addon.Buttons.Selected(1, 1), selected, "physical button persists across pages")
 H.equal(#addon.Buttons.All(), 8)
 H.equal(addon.Buttons.Selected(0, 1), nil)
 H.equal(addon.Buttons.Selected(1, 13), nil)
 H.equal(addon.Buttons.Selected(1.5, 1), nil)
+
 world.secret[2] = true
 H.equal(addon.Buttons.Selected(2, 1), nil)
 world.secret[2] = nil
 
 world.env.GetShapeshiftFormID = function() return 17 end
+
 H.equal(addon.Stance.Current(), "battle")
+
 world.env.GetShapeshiftFormID = function() return 18 end
+
 H.equal(addon.Stance.Current(), "defensive")
+
 world.env.GetShapeshiftFormID = function() return 19 end
+
 H.equal(addon.Stance.Current(), "berserker")
+
 world.env.GetShapeshiftFormID = function() return nil end
+
 H.equal(addon.Stance.Current(), "unknown")
+
 world.env.GetShapeshiftFormID = function() error("restricted") end
+
 H.equal(addon.Stance.Current(), "unknown")
+
 world.env.GetShapeshiftFormID = function() return 17 end
 world.secret[17] = true
+
 H.equal(addon.Stance.Current(), "unknown")
 
 H.equal(addon.Client.Boolean(true), true)
@@ -112,7 +128,7 @@ H.equal(addon.Client.Boolean(true), nil)
 
 local spellWorld = H.new()
 local spellAddon = load(spellWorld)
-local bank = {}
+local bank = 0
 spellWorld.env.Enum = {
     SpellBookSpellBank = { Player = bank },
     SpellBookItemType = { Spell = 1 },
@@ -162,5 +178,37 @@ local restrictedItem = setmetatable({}, { __index = function() error("restricted
 spellWorld.secret[restrictedItem] = true
 spellWorld.env.C_SpellBook.GetSpellBookItemInfo = function() return restrictedItem end
 H.equal(#spellAddon.Client.PlayerSpells(), 0)
+
+spellWorld.env.C_SpellBook.GetSpellBookItemInfo = function()
+    return { itemType = 1, isPassive = false, isOffSpec = false, spellID = 7384 }
+end
+local normalBook = spellWorld.env.C_SpellBook
+local normalEnum = spellWorld.env.Enum
+spellWorld.secret[normalBook] = true
+H.equal(#spellAddon.Client.PlayerSpells(), 0, "secret spellbook global")
+spellWorld.secret[normalBook] = nil
+
+spellWorld.secret[normalEnum] = true
+H.equal(#spellAddon.Client.PlayerSpells(), 0, "secret enum global")
+spellWorld.secret[normalEnum] = nil
+
+local normalBanks = normalEnum.SpellBookSpellBank
+spellWorld.secret[normalBanks] = true
+H.equal(#spellAddon.Client.PlayerSpells(), 0, "secret bank table")
+spellWorld.secret[normalBanks] = nil
+
+spellWorld.env.C_SpellBook.GetSpellBookItemInfo = function()
+    return { itemType = 1, isPassive = false, isOffSpec = false, spellID = 7384 }
+end
+spellWorld.env.Enum = { SpellBookSpellBank = {}, SpellBookItemType = { Spell = 1 } }
+
+H.equal(#spellAddon.Client.PlayerSpells(), 0, "missing player bank constant")
+
+spellWorld.env.C_SpellBook.GetSpellBookItemInfo = function()
+    return { itemType = nil, isPassive = false, isOffSpec = false, spellID = 7384 }
+end
+spellWorld.env.Enum = { SpellBookSpellBank = { Player = bank }, SpellBookItemType = {} }
+
+H.equal(#spellAddon.Client.PlayerSpells(), 0, "missing spell item type constant")
 
 print("reactive foundation: PASS")

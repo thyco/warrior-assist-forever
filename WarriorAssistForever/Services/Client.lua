@@ -32,7 +32,8 @@ end
 
 function Client.PlayerSpells()
     local spells = {}
-    if not C_SpellBook or not Enum or not Client.Readable(C_SpellBook) or not Client.Readable(Enum) then
+    if not Client.Readable(C_SpellBook) or not Client.Readable(Enum)
+        or type(C_SpellBook) ~= "table" or type(Enum) ~= "table" then
         return spells
     end
 
@@ -42,7 +43,8 @@ function Client.PlayerSpells()
     local lineInfo = C_SpellBook.GetSpellBookSkillLineInfo
     local itemInfo = C_SpellBook.GetSpellBookItemInfo
 
-    if not bookBank or not itemTypes or not Client.Readable(bookBank) or not Client.Readable(itemTypes)
+    if not Client.Readable(bookBank) or not Client.Readable(itemTypes)
+        or type(bookBank) ~= "table" or type(itemTypes) ~= "table"
         or not Client.Readable(countSpells) or not Client.Readable(lineInfo) or not Client.Readable(itemInfo)
         or type(countSpells) ~= "function" or type(lineInfo) ~= "function" or type(itemInfo) ~= "function" then
         return spells
@@ -50,7 +52,9 @@ function Client.PlayerSpells()
 
     local bank = bookBank.Player
     local spellType = itemTypes.Spell
-    if not Client.Readable(bank) or not Client.Readable(spellType) then
+    if not Client.Number(bank) or not Client.Number(spellType)
+        or bank < 0 or bank ~= math.floor(bank)
+        or spellType < 0 or spellType ~= math.floor(spellType) then
         return spells
     end
 
