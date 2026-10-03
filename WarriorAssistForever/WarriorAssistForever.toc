@@ -15,6 +15,7 @@ Services/Config.lua
 Services/Client.lua
 Services/Buttons.lua
 Services/Stance.lua
+Services/ReactiveSpells.lua
 Services/Timers.lua
 Services/BattleShoutAura.lua
 Services/Glow.lua
