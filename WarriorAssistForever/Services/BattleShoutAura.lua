@@ -118,6 +118,8 @@ function BattleShoutAura.Initialize()
         end
     end
 
+    BattleShoutAura.name = spellName
+
     state = "unknown"
     sampled = false
     instanceID = nil

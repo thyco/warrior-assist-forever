@@ -5,10 +5,32 @@ function H.equal(actual, expected, label)
 end
 
 function H.new()
-    local world = { auras = {}, time = 0, combat = false, class = "WARRIOR", secret = {}, addon = {}, frames = {}, glows = {}, glowActive = {} }
+    local world = { auras = {}, time = 0, combat = false, class = "WARRIOR", secret = {}, addon = {}, frames = {}, glows = {}, glowActive = {}, combatFrameCreations = 0, auraQueries = 0 }
 
     local function frame(parent)
-        local value = { parent = parent, visible = true, level = 0 }
+        local value = { parent = parent, visible = true, level = 0, scripts = {}, events = {} }
+
+        function value:SetSize(width, height) self.width, self.height = width, height end
+        function value:SetFrameStrata(strata) self.strata = strata end
+        function value:SetMovable(movable) self.movable = movable end
+        function value:SetClampedToScreen(clamped) self.clamped = clamped end
+        function value:RegisterForDrag(button) self.dragButton = button end
+        function value:SetScript(event, callback) self.scripts[event] = callback end
+        function value:RegisterEvent(event) self.events[event] = true end
+        function value:RegisterUnitEvent(event, unit) self.events[event] = unit end
+        function value:StartMoving() self.moving = true end
+        function value:StopMovingOrSizing() self.moving = false end
+        function value:GetCenter() return self.x or 500, self.y or 400 end
+        function value:ClearAllPoints() self.point = nil end
+        function value:SetPoint(...) self.point = { ... } end
+        function value:SetShown(shown) self.visible = shown end
+        function value:IsVisible() return self.visible end
+        function value:CreateTexture()
+            return {
+                SetAllPoints = function() end,
+                SetTexture = function(texture, path) texture.path = path end,
+            }
+        end
 
         function value:SetAllPoints(target)
             self.points = target
@@ -54,6 +76,7 @@ function H.new()
         C_Spell = { GetSpellInfo = function() return { name = world.spellName or "Battle Shout" } end },
         C_UnitAuras = {
             GetAuraDataBySpellName = function(unit, name, filter)
+                world.auraQueries = world.auraQueries + 1
                 assert(unit == "player" and filter == "HELPFUL")
                 if world.auraError or world.directError then error("restricted") end
                 if world.directResult then return world.directResult end
@@ -76,11 +99,19 @@ function H.new()
         UnitClass = function() return "Warrior", world.class end,
         issecretvalue = function(value) return world.secret[value] == true end,
         InCombatLockdown = function() return world.combat end,
-        CreateFrame = function(_, _, parent) return frame(parent) end,
+        CreateFrame = function(_, _, parent)
+            if world.combat then
+                world.combatFrameCreations = world.combatFrameCreations + 1
+            end
+
+            return frame(parent)
+        end,
         LibStub = function() return library end,
     }, { __index = _G })
 
     world.env._G = world.env
+    world.env.UIParent = { GetCenter = function() return 500, 400 end }
+    world.env.C_Spell.GetSpellTexture = function() return 132333 end
 
     function world:newCDMItem(cooldownID, spellID, visible)
         local item = self:newFrame()
@@ -131,6 +162,25 @@ function H.new()
         end
 
         return self.addon
+    end
+
+    function world:loadManifest()
+        for line in io.lines("WarriorAssistForever/WarriorAssistForever.toc") do
+            if line:match("%.lua$") and not line:match("^Libs/") then
+                self:load({ (line:gsub("%.lua$", "")) })
+            end
+        end
+
+        return self.addon
+    end
+
+    function world:tick(elapsed)
+        self.time = self.time + elapsed
+        for _, target in ipairs(self.frames) do
+            if target.scripts.OnUpdate then
+                target.scripts.OnUpdate(target, elapsed)
+            end
+        end
     end
 
     function world:fire(event, ...)

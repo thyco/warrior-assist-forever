@@ -16,3 +16,6 @@ Services/Timers.lua
 Services/BattleShoutAura.lua
 Services/Glow.lua
 Services/CDM.lua
+Services/BattleShoutIcon.lua
+Features/BattleShoutReminder.lua
+Bootstrap.lua
