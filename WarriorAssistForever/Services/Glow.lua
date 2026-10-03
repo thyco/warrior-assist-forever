@@ -97,6 +97,10 @@ function Glow.ConfigureOwner(owner, options)
     end
 end
 
+function Glow.IsPrepared(button)
+    return entries[button] ~= nil
+end
+
 function Glow.Prepare(button)
     if entries[button] then
         return entries[button]
