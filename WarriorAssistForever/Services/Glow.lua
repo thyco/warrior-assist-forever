@@ -51,23 +51,23 @@ local function update(entry)
     end
 
     if wanted then
-        if not entry.active then
-            entry.frame:Show()
-        end
-
         local animationChanged = entry.startAnim ~= startAnim
         if entry.active and animationChanged and not startAnim then
-            -- Restart through the public library API to cancel any in-flight
-            -- startup flash and go directly to the loop. This occurs once.
-            library.ProcGlow_Stop(entry.frame, glowKey)
+            -- Hide stops both animations without returning our reserved effect
+            -- to the shared library pool. The next start selects the loop.
+            entry.effect:Hide()
         end
 
         if not entry.active or animationChanged or not sameColor(entry.color, color) then
             -- Updating the shown effect changes tint without replaying OnShow.
             library.ProcGlow_Start(entry.frame, { key = glowKey, startAnim = startAnim, color = color })
         end
+
+        if not entry.active then
+            entry.frame:Show()
+        end
     elseif entry.active then
-        library.ProcGlow_Stop(entry.frame, glowKey)
+        entry.effect:Hide()
         entry.frame:Hide()
     end
 
@@ -118,7 +118,14 @@ function Glow.Prepare(button)
 
     frame:Hide()
 
-    local entry = { frame = frame, owners = {}, active = false }
+    -- ProcGlow_Start allocates the effect, textures, and animation groups lazily.
+    -- Keep that effect attached for this overlay's lifetime: releasing it would
+    -- let another addon consume the pool entry before our next combat reminder.
+    library.ProcGlow_Start(frame, { key = glowKey, startAnim = false })
+    local effect = frame["_ProcGlow" .. glowKey]
+    effect:Hide()
+
+    local entry = { frame = frame, effect = effect, owners = {}, active = false }
     entries[button] = entry
     return entry
 end

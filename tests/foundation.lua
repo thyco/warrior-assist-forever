@@ -60,5 +60,23 @@ H.equal(other.Client.Number(42), 42)
 local secret = {}
 invalid.secret[secret] = true
 H.equal(other.Client.Readable(secret), false)
+H.equal(other.Client.Number(secret), nil, "secret number rejected")
+
+invalid.combat = secret
+invalid.class = secret
+
+H.equal(other.Client.InCombat(), false, "secret combat result rejected")
+H.equal(other.Client.IsWarrior(), false, "secret class result rejected")
+
+-- Secret values with otherwise valid types must also fail closed.
+invalid.secret[42] = true
+invalid.secret[true] = true
+invalid.secret["WARRIOR"] = true
+invalid.combat = true
+invalid.class = "WARRIOR"
+
+H.equal(other.Client.Number(42), nil, "secret numeric scalar rejected")
+H.equal(other.Client.InCombat(), false, "secret true combat result rejected")
+H.equal(other.Client.IsWarrior(), false, "secret Warrior token rejected")
 
 print("foundation: PASS")

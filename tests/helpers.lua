@@ -81,6 +81,16 @@ function H.new()
 
     local library = {
         ProcGlow_Start = function(target, options)
+            local key = "_ProcGlow" .. options.key
+            if not target[key] then
+                target[key] = {
+                    Hide = function()
+                        world.glows[target] = nil
+                        world.glowActive[target.parent] = false
+                    end,
+                }
+            end
+
             world.glows[target] = options
             world.glowActive[target.parent] = true
         end,
