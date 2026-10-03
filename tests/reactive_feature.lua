@@ -1,0 +1,197 @@
+local H = dofile("tests/helpers.lua")
+
+local function setup(options)
+    local world = H.new()
+    world.time = 100
+    world.stanceID = 17
+    world.usable = { [7384] = true, [6572] = true }
+    world.overlay = { [7384] = false, [6572] = false }
+    world.cooldowns = {
+        [7384] = { startTime = 0, duration = 0, isActive = false, isEnabled = true },
+        [6572] = { startTime = 0, duration = 0, isActive = false, isEnabled = true },
+    }
+    world.env.WarriorAssistForeverDB = {
+        overpowerBar = 1, overpowerButton = 1,
+        revengeBar = 1, revengeButton = 2,
+    }
+    world.overpowerButton = world:newFrame()
+    world.revengeButton = world:newFrame()
+    world.env.ActionButton1 = world.overpowerButton
+    world.env.ActionButton2 = world.revengeButton
+    world.env.GetShapeshiftFormID = function() return world.stanceID end
+    world.env.Enum = {
+        SpellBookSpellBank = { Player = 0 },
+        SpellBookItemType = { Spell = 1 },
+    }
+    world.env.C_SpellBook = {
+        GetNumSpellBookSkillLines = function() return 1 end,
+        GetSpellBookSkillLineInfo = function() return { itemIndexOffset = 0, numSpellBookItems = 2 } end,
+        GetSpellBookItemInfo = function(index)
+            return { itemType = 1, isPassive = false, isOffSpec = false,
+                spellID = index == 1 and 7384 or 6572 }
+        end,
+    }
+    world.env.C_Spell.GetSpellInfo = function(id)
+        local names = { [7384] = "Overpower", [6572] = "Revenge", [6673] = "Battle Shout" }
+        return names[id] and { name = names[id] }
+    end
+    world.env.C_Spell.IsSpellUsable = function(id) return world.usable[id] end
+    world.env.C_Spell.GetSpellCooldown = function(id) return world.cooldowns[id] end
+    world.env.C_SpellActivationOverlay = {
+        IsSpellOverlayed = function(id) return world.overlay[id] end,
+    }
+
+    if options then options(world) end
+
+    local addon = world:loadManifest()
+    world:fire("PLAYER_LOGIN")
+    assert(addon.ReactiveAbilities, "ReactiveAbilities must load")
+    return world, addon
+end
+
+local function reactiveEvent(world, event, ...)
+    local frame = world.addon.ReactiveAbilities.frame
+    assert(frame.events[event] == true, "event must be registered: " .. event)
+    frame.scripts.OnEvent(frame, event, ...)
+end
+
+do
+    local world, addon = setup()
+    H.equal(world.glowActive[world.overpowerButton], true, "Battle Overpower needs no combat or target")
+    H.equal(world.glowActive[world.revengeButton], false)
+    H.equal(addon.ReactiveAbilities:Status().stance, "battle")
+
+    world.usable[7384] = false
+    reactiveEvent(world, "SPELL_UPDATE_USABLE")
+    H.equal(world.glowActive[world.overpowerButton], false)
+
+    world.stanceID = 19
+    world.overlay[7384] = true
+    reactiveEvent(world, "SPELL_ACTIVATION_OVERLAY_GLOW_SHOW", 7384)
+    H.equal(world.glowActive[world.overpowerButton], true, "Berserker uses overlay")
+
+    world.stanceID = 18
+    reactiveEvent(world, "UPDATE_SHAPESHIFT_FORM")
+    H.equal(world.glowActive[world.overpowerButton], false)
+    H.equal(world.glowActive[world.revengeButton], true)
+
+    world.stanceID = 19
+    world.overlay[7384] = false
+    reactiveEvent(world, "UPDATE_SHAPESHIFT_FORM")
+    H.equal(world.glowActive[world.overpowerButton], false)
+    H.equal(world.glowActive[world.revengeButton], false)
+
+    world.stanceID = nil
+    reactiveEvent(world, "UPDATE_SHAPESHIFT_FORM")
+    H.equal(addon.ReactiveAbilities:Status().stance, "unknown")
+    H.equal(world.glowActive[world.overpowerButton], false)
+end
+
+do
+    local world, addon = setup()
+    world.cooldowns[7384] = { startTime = 100, duration = 2, isActive = true, isEnabled = true }
+    reactiveEvent(world, "SPELL_UPDATE_COOLDOWN")
+    H.equal(world.glowActive[world.overpowerButton], false)
+
+    world:tick(2.1)
+    H.equal(world.glowActive[world.overpowerButton], true, "poll catches cooldown expiry")
+
+    world.overpowerButton:Hide()
+    reactiveEvent(world, "ACTIONBAR_SLOT_CHANGED")
+    H.equal(world.glowActive[world.overpowerButton], false)
+
+    world.overpowerButton:Show()
+    world.env.ActionButton1 = nil
+    reactiveEvent(world, "ACTIONBAR_PAGE_CHANGED")
+    H.equal(world.glowActive[world.overpowerButton], false)
+
+    local replacement = world:newFrame()
+    world.env.ActionButton1 = replacement
+    reactiveEvent(world, "ACTIONBAR_SLOT_CHANGED")
+    H.equal(world.glowActive[replacement], true)
+    H.equal(world.glowActive[world.overpowerButton], false)
+
+    addon.Config.Set("overpowerEnabled", false)
+    H.equal(world.glowActive[replacement], false)
+    addon.Config.Set("overpowerEnabled", true)
+    H.equal(world.glowActive[replacement], true)
+
+    reactiveEvent(world, "PLAYER_LEAVING_WORLD")
+    H.equal(world.glowActive[replacement], false)
+    world:tick(1)
+    H.equal(world.glowActive[replacement], false)
+    reactiveEvent(world, "PLAYER_ENTERING_WORLD")
+    H.equal(world.glowActive[replacement], true)
+end
+
+do
+    local world, addon = setup()
+    world.secret[17] = true
+    reactiveEvent(world, "UPDATE_SHAPESHIFT_FORM")
+    H.equal(world.glowActive[world.overpowerButton], false)
+    world.secret[17] = nil
+
+    world.env.C_Spell.IsSpellUsable = function() error("restricted") end
+    reactiveEvent(world, "SPELL_UPDATE_USABLE")
+    H.equal(world.glowActive[world.overpowerButton], false)
+    H.equal(addon.ReactiveAbilities:Status().overpower.signal, "unknown")
+
+    world.env.C_Spell.IsSpellUsable = function(id) return world.usable[id] end
+    reactiveEvent(world, "SPELL_UPDATE_USABLE")
+    H.equal(world.glowActive[world.overpowerButton], true)
+
+    world.cooldowns[7384] = world.secret
+    reactiveEvent(world, "SPELL_UPDATE_COOLDOWN")
+    H.equal(world.glowActive[world.overpowerButton], false)
+end
+
+do
+    local world, addon = setup()
+    world.overpowerButton.IsVisible = function() error("restricted") end
+    reactiveEvent(world, "ACTIONBAR_SLOT_CHANGED")
+    H.equal(world.glowActive[world.overpowerButton], false, "unreadable visibility clears glow")
+
+    addon.Config.Set("overpowerEnabled", false)
+    addon.Config.Set("revengeEnabled", false)
+    H.equal(addon.ReactiveAbilities.frame.scripts.OnUpdate, nil, "disabled features stop polling")
+end
+
+do
+    local world, addon = setup()
+    addon.Config.Set("revengeButton", 1)
+    world.stanceID = 18
+    reactiveEvent(world, "UPDATE_SHAPESHIFT_FORM")
+    H.equal(world.glowActive[world.overpowerButton], true, "shared button retains Revenge owner")
+    addon.Config.Set("revengeEnabled", false)
+    H.equal(world.glowActive[world.overpowerButton], false)
+
+    world.combat = true
+    local late = world:newFrame()
+    world.env.ActionButton3 = late
+    addon.Config.Set("overpowerButton", 3)
+    world.stanceID = 17
+    reactiveEvent(world, "UPDATE_SHAPESHIFT_FORM")
+    H.equal(world.glowActive[late], nil, "unprepared combat button stays dark")
+    H.equal(world.combatFrameCreations, 0)
+
+    world.combat = false
+    reactiveEvent(world, "PLAYER_REGEN_ENABLED")
+    H.equal(world.glowActive[late], true)
+    H.equal(addon.Glow.IsPrepared(late), true)
+end
+
+do
+    local world, addon = setup()
+    local item = world:newCDMItem(42, 6673, true)
+    world:setCDMItems({ item })
+    world:fire("COOLDOWN_VIEWER_DATA_LOADED")
+    world.auras = { { name = "Battle Shout", expirationTime = 105 } }
+    world.time = 100
+    world.combat = true
+    world:fire("PLAYER_REGEN_DISABLED")
+    H.equal(world.glowActive[item], true, "Battle Shout owner remains active")
+    H.equal(world.glowActive[world.overpowerButton], true, "reactive owner remains active")
+    H.equal(addon.BattleShoutReminder:Status().output, "cdm")
+end
+
+print("reactive feature: PASS")
