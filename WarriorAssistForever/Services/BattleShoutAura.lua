@@ -37,6 +37,12 @@ local function query(method, ...)
     end
 end
 
+local function hasFutureExpiration(aura)
+    local expiration = Client.Number(aura.expirationTime)
+
+    return expiration and expiration > GetTime()
+end
+
 local function sample()
     if not spellName then
         return nil, false
@@ -61,7 +67,7 @@ local function sample()
         end
 
         local match, readable = matches(aura)
-        if match and not found then
+        if match and (not found or (hasFutureExpiration(aura) and not hasFutureExpiration(found))) then
             found = aura
         end
         if not readable then

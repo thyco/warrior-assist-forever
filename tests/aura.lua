@@ -211,4 +211,16 @@ test("secret instance and update payload stay safe", function()
     H.equal(aura.Refresh({ updatedAuraInstanceIDs = { world.secret } }).deadline, nil)
 end)
 
+test("timed enumeration takes priority over untimed direct presence", function()
+    local world, aura = setup()
+    buff(world, 250)
+    world.directResult = { name = "Battle Shout", auraInstanceID = 7 }
+
+    local status = aura.Refresh()
+
+    H.equal(status.state, "present")
+    H.equal(status.deadline, 250)
+    H.equal(status.quality, "exact")
+end)
+
 print("aura: PASS (" .. count .. " tests)")
