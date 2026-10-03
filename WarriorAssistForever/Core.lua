@@ -15,6 +15,7 @@ function addon:Start()
 
     self.started = true
     self.Config.Initialize()
+    self.SettingsPanel:Initialize()
     self.active = self.Client.IsWarrior()
     if not self.active then
         return

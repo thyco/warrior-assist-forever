@@ -17,5 +17,7 @@ Services/BattleShoutAura.lua
 Services/Glow.lua
 Services/CDM.lua
 Services/BattleShoutIcon.lua
+Services/SettingsWidgets.lua
 Features/BattleShoutReminder.lua
+SettingsPanel.lua
 Bootstrap.lua

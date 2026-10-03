@@ -5,12 +5,15 @@ function H.equal(actual, expected, label)
 end
 
 function H.new()
-    local world = { auras = {}, time = 0, combat = false, class = "WARRIOR", secret = {}, addon = {}, frames = {}, glows = {}, glowActive = {}, combatFrameCreations = 0, auraQueries = 0 }
+    local world = { auras = {}, time = 0, combat = false, class = "WARRIOR", secret = {}, addon = {}, frames = {}, glows = {}, glowActive = {}, combatFrameCreations = 0, auraQueries = 0, printed = {}, settings = {} }
 
     local function frame(parent)
         local value = { parent = parent, visible = true, level = 0, scripts = {}, events = {} }
 
         function value:SetSize(width, height) self.width, self.height = width, height end
+        function value:SetHeight(height) self.height = height end
+        function value:SetWidth(width) self.width = width end
+        function value:GetWidth() return self.width or 580 end
         function value:SetFrameStrata(strata) self.strata = strata end
         function value:SetMovable(movable) self.movable = movable end
         function value:SetClampedToScreen(clamped) self.clamped = clamped end
@@ -25,10 +28,25 @@ function H.new()
         function value:SetPoint(...) self.point = { ... } end
         function value:SetShown(shown) self.visible = shown end
         function value:IsVisible() return self.visible end
+        function value:SetText(text) self.text = text end
+        function value:SetChecked(checked) self.checked = checked end
+        function value:GetChecked() return self.checked end
+        function value:SetFontObject(font) self.font = font end
+        function value:SetJustifyH(justify) self.justify = justify end
+        function value:SetTextColor(...) self.textColor = { ... } end
+        function value:SetBackdrop(backdrop) self.backdrop = backdrop end
+        function value:SetBackdropColor(...) self.backdropColor = { ... } end
+        function value:SetBackdropBorderColor(...) self.borderColor = { ... } end
+        function value:SetScrollChild(child) self.scrollChild = child end
+        function value:CreateFontString()
+            return frame(self)
+        end
         function value:CreateTexture()
             return {
                 SetAllPoints = function() end,
                 SetTexture = function(texture, path) texture.path = path end,
+                SetPoint = function() end,
+                SetColorTexture = function(texture, ...) texture.color = { ... } end,
             }
         end
 
@@ -49,6 +67,7 @@ function H.new()
         end
 
         function value:Show()
+            self.showCount = (self.showCount or 0) + 1
             self.visible = true
         end
 
@@ -99,14 +118,47 @@ function H.new()
         UnitClass = function() return "Warrior", world.class end,
         issecretvalue = function(value) return world.secret[value] == true end,
         InCombatLockdown = function() return world.combat end,
-        CreateFrame = function(_, _, parent)
+        CreateFrame = function(kind, _, parent)
             if world.combat then
                 world.combatFrameCreations = world.combatFrameCreations + 1
             end
 
-            return frame(parent)
+            local created = frame(parent)
+            if kind == "CheckButton" then
+                created.Text = frame(created)
+            end
+            return created
         end,
         LibStub = function() return library end,
+        print = function(message) world.printed[#world.printed + 1] = message end,
+        SlashCmdList = {},
+        UIDropDownMenu_SetWidth = function(dropdown, width) dropdown.width = width end,
+        UIDropDownMenu_Initialize = function(dropdown, callback) dropdown.initialize = callback end,
+        UIDropDownMenu_SetText = function(dropdown, value) dropdown.text = value end,
+        UIDropDownMenu_CreateInfo = function() return {} end,
+        UIDropDownMenu_AddButton = function() end,
+        Settings = {
+            VarType = { Boolean = "boolean", Number = "number", String = "string" },
+            RegisterCanvasLayoutCategory = function(canvas, name)
+                local category = { canvas = canvas, name = name, id = 7 }
+                function category:GetID() return self.id end
+                world.category = category
+                return category
+            end,
+            RegisterProxySetting = function(category, variable, valueType, label, default, getter, setter)
+                local setting = { variable = variable, valueType = valueType, label = label, default = default }
+                function setting:GetValue() return getter() end
+                function setting:SetValue(value) setter(value) end
+                world.settings[variable] = setting
+                return setting
+            end,
+            RegisterAddOnCategory = function(category) world.registeredCategory = category end,
+            OpenToCategory = function(id) world.openedCategory = id end,
+        },
+        ColorPickerFrame = {
+            SetupColorPickerAndShow = function(self, options) self.options = options end,
+            GetColorRGB = function() return 0, 1, 0 end,
+        },
     }, { __index = _G })
 
     world.env._G = world.env
