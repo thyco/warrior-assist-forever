@@ -8,13 +8,31 @@ local defaults = {
     glowColor = "ff00ff00",
     iconX = 0,
     iconY = -270,
+    overpowerEnabled = true,
+    overpowerBar = 0,
+    overpowerButton = 1,
+    revengeEnabled = true,
+    revengeBar = 0,
+    revengeButton = 1,
 }
 local values
 local listeners = {}
 
 local function validValue(key, value)
+    if issecretvalue and issecretvalue(value) then
+        return false
+    end
+
     if type(value) ~= type(defaults[key]) then
         return false
+    end
+
+    if key == "overpowerBar" or key == "revengeBar" then
+        return value >= 0 and value <= 8 and value == math.floor(value)
+    end
+
+    if key == "overpowerButton" or key == "revengeButton" then
+        return value >= 1 and value <= 12 and value == math.floor(value)
     end
 
     if key == "leadSeconds" then

@@ -13,6 +13,8 @@ Libs/LibCustomGlow-1.0/LibCustomGlow-1.0.lua
 Core.lua
 Services/Config.lua
 Services/Client.lua
+Services/Buttons.lua
+Services/Stance.lua
 Services/Timers.lua
 Services/BattleShoutAura.lua
 Services/Glow.lua
