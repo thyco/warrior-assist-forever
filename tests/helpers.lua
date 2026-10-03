@@ -5,7 +5,7 @@ function H.equal(actual, expected, label)
 end
 
 function H.new()
-    local world = { time = 0, combat = false, class = "WARRIOR", secret = {}, addon = {}, frames = {}, glows = {} }
+    local world = { auras = {}, time = 0, combat = false, class = "WARRIOR", secret = {}, addon = {}, frames = {}, glows = {} }
 
     local function frame(parent)
         local value = { parent = parent, visible = true, level = 0 }
@@ -49,6 +49,27 @@ function H.new()
 
     world.env = setmetatable({
         GetTime = function() return world.time end,
+        C_Spell = { GetSpellInfo = function() return { name = world.spellName or "Battle Shout" } end },
+        C_UnitAuras = {
+            GetAuraDataBySpellName = function(unit, name, filter)
+                assert(unit == "player" and filter == "HELPFUL")
+                if world.auraError or world.directError then error("restricted") end
+                if world.directResult then return world.directResult end
+                if world.secret[world.auras] then return nil end
+
+                for _, aura in ipairs(world.auras) do
+                    if not world.secret[aura] and not world.secret[aura.name] and aura.name == name then
+                        return aura
+                    end
+                end
+            end,
+            GetUnitAuras = function(unit, filter, maxCount)
+                assert(unit == "player" and filter == "HELPFUL" and maxCount == nil)
+                if world.auraError or world.enumerationError then error("restricted") end
+
+                return world.auras
+            end,
+        },
         UnitAffectingCombat = function() return world.combat end,
         UnitClass = function() return "Warrior", world.class end,
         issecretvalue = function(value) return world.secret[value] == true end,

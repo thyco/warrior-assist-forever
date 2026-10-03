@@ -13,4 +13,5 @@ Core.lua
 Services/Config.lua
 Services/Client.lua
 Services/Timers.lua
+Services/BattleShoutAura.lua
 Services/Glow.lua
