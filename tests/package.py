@@ -31,6 +31,7 @@ with tempfile.TemporaryDirectory() as temporary:
         assert "WarriorAssistForever/Libs/LibCustomGlow-1.0/LICENSE" in names
         assert "WarriorAssistForever/Libs/LibCustomGlow-1.0/DKForce-LICENSE" in names
         assert "WarriorAssistForever/Libs/README.md" in names
+        assert "WarriorAssistForever/Media/Warrior.tga" in names
         assert all(name.startswith("WarriorAssistForever/") for name in names)
         for name in names:
             assert archive.read(name) == (root / name).read_bytes(), name

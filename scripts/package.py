@@ -26,13 +26,14 @@ def main():
                 raise SystemExit(f"Invalid or missing manifest entry: {entry}")
             files.add(source)
 
-    # Include library attribution, licenses, and README files alongside Lua.
-    for asset in sorted((ADDON / "Libs").rglob("*")):
-        if asset.is_file():
-            source = asset.resolve()
-            if not source.is_relative_to(ADDON):
-                raise SystemExit(f"Library asset is outside the addon directory: {asset}")
-            files.add(source)
+    # Include bundled library files and media textures alongside Lua.
+    for directory in ("Libs", "Media"):
+        for asset in sorted((ADDON / directory).rglob("*")):
+            if asset.is_file():
+                source = asset.resolve()
+                if not source.is_relative_to(ADDON):
+                    raise SystemExit(f"Bundled asset is outside the addon directory: {asset}")
+                files.add(source)
 
     destination = ROOT / "dist" / f"WarriorAssistForever-{version[1]}.zip"
     destination.parent.mkdir(exist_ok=True)
