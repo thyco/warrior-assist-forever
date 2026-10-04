@@ -140,7 +140,8 @@ These checks remain required; no WoW Forever client was available for local test
    cooldowns, and trigger another spell's GCD while each opportunity is active;
    its glow should stay visible until the opportunity ends. Lower rage below the
    ability cost while the proc remains active; the glow should remain and `/waf`
-   should report `low-rage`. Then check stance changes, action bar paging, disabling a
+   should report `low-rage`. Also check low rage with no proc; neither ability
+   should glow. Then check stance changes, action bar paging, disabling a
    feature, and `/waf` diagnostics. Confirm glows clear as opportunities end and
    no Lua errors occur. Record whether Forever exposes Berserker Overpower overlay
    and targetless usability; local mocks cannot establish these client behaviors.
