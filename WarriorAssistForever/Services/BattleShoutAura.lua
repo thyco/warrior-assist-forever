@@ -8,6 +8,7 @@ local spellName
 local state = "unknown"
 local sampled = false
 local instanceID
+local lastConfirmedMissing = false
 
 local function readableTable(value)
     return Client.Readable(value) and type(value) == "table"
@@ -158,11 +159,13 @@ function BattleShoutAura.Initialize()
     state = "unknown"
     sampled = false
     instanceID = nil
+    lastConfirmedMissing = false
     timer:Clear()
 end
 
 function BattleShoutAura.Status()
-    return { state = state, deadline = timer.deadline, quality = timer:Quality() or "none" }
+    return { state = state, deadline = timer.deadline,
+        quality = timer:Quality() or "none", lastConfirmedMissing = lastConfirmedMissing }
 end
 
 function BattleShoutAura.ObservePlayerCast(spellID)
@@ -191,6 +194,7 @@ function BattleShoutAura.ObservePlayerCast(spellID)
     timer:SetDeadline(estimatedDeadline, "estimated")
     state = "unknown"
     instanceID = nil
+    lastConfirmedMissing = false
     sampled = true
     return true
 end
@@ -224,9 +228,11 @@ function BattleShoutAura.Refresh(updateInfo)
 
         state = "present"
         instanceID = currentID
+        lastConfirmedMissing = false
     elseif complete then
         state = "missing"
         instanceID = nil
+        lastConfirmedMissing = true
         timer:Clear()
     else
         state = "unknown"

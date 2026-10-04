@@ -7,7 +7,7 @@ The addon does not cast spells or change bindings.
 
 ## Installation
 
-Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.4.2.zip`.
+Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.4.3.zip`.
 Extract the ZIP into the client's `Interface/AddOns` directory so the manifest is
 `Interface/AddOns/WarriorAssistForever/WarriorAssistForever.toc`. Enable Warrior
 Assist Forever in the AddOns list and log in or reload. LibStub and LibCustomGlow,
@@ -76,9 +76,14 @@ A readable removal of the known aura instance clears its deadline during a
 restricted lookup; the state remains unknown until absence can be confirmed.
 
 Restricted or failing aura queries produce **unknown**, never an invented missing
-buff. A previously known deadline may continue as an estimated late reminder; an
-unknown result without a deadline displays nothing. Missing requires a complete,
-readable aura enumeration confirming absence.
+buff. A previously known deadline may continue as an estimated late reminder.
+After a complete, readable enumeration confirms the buff is missing, its reminder
+stays visible through later unreadable checks, although `/waf` reports the aura
+as unknown. A readable buff or your successful Battle Shout cast clears that
+warning. An unknown result with no prior missing evidence or deadline displays
+nothing. If another Warrior applies the buff while both lookup and event data
+are unreadable, the old missing warning can remain until the buff becomes
+readable.
 
 If the client exposes no usable signal for an external application or refresh,
 accurate timing cannot be guaranteed. Local tests cannot establish combat aura
@@ -138,13 +143,17 @@ These checks remain required; no WoW Forever client was available for local test
 4. With the buff due in combat, hide/untrack its CDM item. Confirm the movable
    icon still glows and the addon puts no glow on any CDM item.
 5. Remove Battle Shout in combat and confirm `missing` with the same screen icon.
+   Trigger another aura change while Battle Shout remains absent; a restricted
+   lookup should report `unknown` without hiding the missing warning.
    Reapply it yourself while aura queries are restricted and confirm the warning
    clears on the successful cast, with `/waf` showing an estimated deadline.
    Disable/re-enable
    the feature while due; leave/re-enter combat and check immediate reevaluation.
 6. Reload with a readable buff, an unreadable buff if reproducible, and no buff.
-   Compare `/waf` state/quality/output with the rules above. Unknown must not become
-   a false missing warning. Check removal and expiration readability in combat.
+   Compare `/waf` state/quality/output with the rules above. An initial unknown
+   state must not create a missing warning; an unknown state after confirmed
+   absence keeps the warning until buff evidence arrives. Check removal and
+   expiration readability in combat.
 7. Choose distinct default bar/button positions for Overpower and Revenge in
    `/waf config`, reload, and confirm both selections persist. Put Overpower or a
    stance-switch macro on its chosen button. Trigger Overpower after a dodge or
@@ -193,7 +202,7 @@ lua tests/reactive_spells.lua
 lua tests/reactive_feature.lua
 python3 tests/package.py
 python3 scripts/package.py
-python3 -m zipfile -l dist/WarriorAssistForever-0.4.2.zip
+python3 -m zipfile -l dist/WarriorAssistForever-0.4.3.zip
 ```
 
 The integration check loads the actual bundled LibStub and LibCustomGlow with WoW

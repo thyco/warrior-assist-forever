@@ -59,7 +59,7 @@ do
     H.equal(world.glowActive[item], nil, "CDM buff icon receives no glow")
 end
 
--- Confirmed missing requires combat but never a target; unknown clears it.
+-- A confirmed missing reminder survives unreadable combat aura updates.
 do
     local world, addon = setup()
     output(addon, "none")
@@ -70,10 +70,23 @@ do
     world:fire("PLAYER_REGEN_DISABLED")
     output(addon, "icon-missing")
 
+    local glow = addon.Glow.Prepare(addon.BattleShoutIcon.frame)
+    local shows = glow.frame.showCount
     world.auraError = true
     world:fire("UNIT_AURA", "player")
-    output(addon, "none")
+    output(addon, "icon-missing")
+    H.equal(addon.BattleShoutAura.Status().state, "unknown")
+    H.equal(addon.BattleShoutAura.Status().lastConfirmedMissing, true)
     H.equal(addon.BattleShoutAura.Status().deadline, nil)
+    H.equal(glow.frame.showCount, shows, "unreadable update does not replay the glow")
+
+    world:fire("UNIT_AURA", "player", { addedAuras = {
+        { name = "Battle Shout", isHelpful = true, expirationTime = 180,
+            auraInstanceID = 7, sourceUnit = "party1" },
+    } })
+    output(addon, "none")
+    H.equal(addon.BattleShoutAura.Status().state, "present")
+    H.equal(addon.BattleShoutAura.Status().lastConfirmedMissing, false)
 end
 
 -- Unknown retains a known deadline, and another Warrior refresh resets it.
@@ -169,11 +182,25 @@ do
     output(addon, "icon-missing")
 
     world.auraError = true
+    world:fire("UNIT_AURA", "player")
+    output(addon, "icon-missing")
     world:fire("UNIT_SPELLCAST_SUCCEEDED", "player", "shout-cast", 6673)
 
     output(addon, "none")
     H.equal(addon.BattleShoutAura.Status().state, "unknown")
+    H.equal(addon.BattleShoutAura.Status().lastConfirmedMissing, false)
     H.equal(addon.BattleShoutAura.Status().deadline, 180)
+end
+
+-- An unreadable initial aura scan never invents a missing reminder.
+do
+    local world, addon = setup(function(w) w.auraError = true end)
+    world.combat = true
+    world:fire("PLAYER_REGEN_DISABLED")
+
+    output(addon, "none")
+    H.equal(addon.BattleShoutAura.Status().state, "unknown")
+    H.equal(addon.BattleShoutAura.Status().lastConfirmedMissing, false)
 end
 
 -- Disabling clears output, observes new auras, and reenabling is immediate.

@@ -27,7 +27,7 @@ function Reminder:Refresh(sampleAura)
     local output = "none"
 
     if addon.Client.InCombat() and enabled then
-        if status.state == "missing" then
+        if status.state == "missing" or (status.state == "unknown" and status.lastConfirmedMissing) then
             output = "icon-missing"
         elseif status.deadline and GetTime() >= status.deadline - addon.Config.Get("leadSeconds") then
             output = "icon-late"

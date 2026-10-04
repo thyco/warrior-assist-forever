@@ -102,13 +102,48 @@ test("restricted query retains prior deadline as estimated", function()
     H.equal(status.quality, "estimated")
 end)
 
-test("restricted query clears previous missing state", function()
+test("restricted query keeps last confirmed missing evidence", function()
     local world, aura = setup()
     aura.Refresh()
     world.auraError = true
 
     H.equal(aura.Refresh().state, "unknown")
+    H.equal(aura.Status().lastConfirmedMissing, true)
     H.equal(aura.Status().deadline, nil)
+end)
+
+test("new unreadable buff after uncertain absence starts an estimate", function()
+    local world, aura = setup()
+    aura.Refresh()
+    world.auraError = true
+    aura.Refresh()
+    world.time = 20
+
+    local status = aura.Refresh({ addedAuras = {
+        { name = "Battle Shout", isHelpful = true, sourceUnit = "party1" },
+    } })
+
+    H.equal(status.state, "present")
+    H.equal(status.deadline, 200)
+    H.equal(status.quality, "estimated")
+    H.equal(status.lastConfirmedMissing, false)
+end)
+
+test("buff found after an uncertain interval has no invented start time", function()
+    local world, aura = setup()
+    aura.Refresh()
+    world.auraError = true
+    aura.Refresh()
+    world.time = 170
+    world.auraError = false
+    buff(world, nil)
+
+    local status = aura.Refresh()
+
+    H.equal(status.state, "present")
+    H.equal(status.deadline, nil)
+    H.equal(status.quality, "none")
+    H.equal(status.lastConfirmedMissing, false)
 end)
 
 test("matching added aura starts estimate", function()
