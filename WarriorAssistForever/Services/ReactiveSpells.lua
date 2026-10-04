@@ -1,5 +1,5 @@
 local _, addon = ...
-local ReactiveSpells = { ids = { overpower = {}, revenge = {} }, gcdOnly = {}, gcdStart = nil }
+local ReactiveSpells = { ids = { overpower = {}, revenge = {} }, gcdOnly = {} }
 addon.ReactiveSpells = ReactiveSpells
 
 local seeds = { overpower = 7384, revenge = 6572 }
@@ -52,7 +52,6 @@ function ReactiveSpells.Rebuild()
     local seen = { overpower = {}, revenge = {} }
     ReactiveSpells.ids = { overpower = {}, revenge = {} }
     ReactiveSpells.gcdOnly = {}
-    ReactiveSpells.gcdStart = nil
 
     for kind, seed in pairs(seeds) do
         names[kind] = spellName(seed)
@@ -80,15 +79,8 @@ end
 
 function ReactiveSpells.ObserveCooldownEvent()
     ReactiveSpells.gcdOnly = {}
-    ReactiveSpells.gcdStart = nil
 
-    local gcd = read(spellAPI("GetSpellCooldown"), 61304)
-    if addon.Client.Boolean(member(gcd, "isActive")) ~= true then
-        return
-    end
-
-    ReactiveSpells.gcdStart = nonnegative(member(gcd, "startTime"))
-
+    -- Like Hunter's reactive glow, sample isOnGCD only inside this event.
     for _, ranks in pairs(ReactiveSpells.ids) do
         for _, id in ipairs(ranks) do
             local info = read(spellAPI("GetSpellCooldown"), id)
@@ -117,24 +109,6 @@ local function signalFor(id, kind, mode)
     return "unknown"
 end
 
-local function eventGCDReady(id)
-    if not ReactiveSpells.gcdOnly[id] then
-        return false
-    end
-
-    local gcd = read(spellAPI("GetSpellCooldown"), 61304)
-    local active = addon.Client.Boolean(member(gcd, "isActive"))
-    local start = nonnegative(member(gcd, "startTime"))
-    if active ~= true or (ReactiveSpells.gcdStart and start ~= ReactiveSpells.gcdStart) then
-        ReactiveSpells.gcdOnly = {}
-        ReactiveSpells.gcdStart = nil
-
-        return false
-    end
-
-    return true
-end
-
 local function cooldownFor(id)
     local info = read(spellAPI("GetSpellCooldown"), id)
 
@@ -145,22 +119,19 @@ local function cooldownFor(id)
     local enabled = addon.Client.Boolean(member(info, "isEnabled"))
     if enabled == false then return "blocked" end
 
+    -- Match Hunter: event-confirmed GCD readiness precedes duration fallbacks.
     local active = addon.Client.Boolean(member(info, "isActive"))
-    if active == false then return "ready" end
+    if active == false or ReactiveSpells.gcdOnly[id] then return "ready" end
 
     local ownDuration = read(spellAPI("GetSpellCooldownDuration"), id, true)
     if ownDuration then
         if durationBoolean(ownDuration, "HasSecretValues") ~= false then
-            if eventGCDReady(id) then return "ready" end
-
             return "unknown"
         end
 
         local zero = durationBoolean(ownDuration, "IsZero")
         if zero == true then return "ready" end
         if zero ~= false then
-            if eventGCDReady(id) then return "ready" end
-
             return "unknown"
         end
 
@@ -168,12 +139,8 @@ local function cooldownFor(id)
         if expired == true then return "ready" end
         if expired == false then return "blocked" end
 
-        if eventGCDReady(id) then return "ready" end
-
         return "unknown"
     end
-
-    if eventGCDReady(id) then return "ready" end
 
     local start = nonnegative(member(info, "startTime"))
     local duration = nonnegative(member(info, "duration"))

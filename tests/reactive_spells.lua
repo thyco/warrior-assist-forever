@@ -155,6 +155,26 @@ status = durationSpells.Evaluate("overpower", "usable")
 H.equal(status.ready, true, "inactive native cooldown remains ready when duration object is restricted")
 H.equal(status.cooldown, "ready")
 
+local hunterWorld, hunterStyle = setup()
+local hiddenCooldown = {}
+hunterWorld.secret[hiddenCooldown] = true
+hunterWorld.usable[7384] = true
+hunterWorld.usable[6572] = true
+hunterWorld.cooldowns[7384] = { startTime = hiddenCooldown, duration = hiddenCooldown,
+    isActive = true, isEnabled = true, isOnGCD = true }
+hunterWorld.cooldowns[6572] = { startTime = hiddenCooldown, duration = hiddenCooldown,
+    isActive = true, isEnabled = true, isOnGCD = true }
+hunterWorld.env.C_Spell.GetSpellCooldownDuration = function()
+    return { HasSecretValues = function() return true end }
+end
+
+hunterStyle.ObserveCooldownEvent()
+status = hunterStyle.Evaluate("overpower", "usable")
+H.equal(status.ready, true, "Overpower trusts its event GCD flag without a separate GCD status")
+
+status = hunterStyle.Evaluate("revenge", "usable")
+H.equal(status.ready, true, "Revenge trusts its event GCD flag without a separate GCD status")
+
 local eventWorld, eventSpells = setup({ 6572 })
 local hiddenTime = {}
 eventWorld.secret[hiddenTime] = true
@@ -182,27 +202,26 @@ eventWorld.env.C_Spell.GetSpellCooldownDuration = function()
     }
 end
 status = eventSpells.Evaluate("revenge", "usable")
-H.equal(status.ready, false, "readable own cooldown overrides cached GCD evidence")
+H.equal(status.ready, true, "event GCD flag takes precedence over the duration query")
 
 eventWorld.env.C_Spell.GetSpellCooldownDuration = function()
     return { HasSecretValues = function() return true end }
 end
 eventWorld.cooldowns[61304].isActive = false
+eventWorld.cooldowns[6572].isOnGCD = false
+eventSpells.ObserveCooldownEvent()
 status = eventSpells.Evaluate("revenge", "usable")
-H.equal(status.ready, false, "cached GCD evidence expires when the global cooldown ends")
+H.equal(status.ready, false, "cooldown event without GCD flag clears readiness")
 
 eventWorld.cooldowns[61304].isActive = true
 status = eventSpells.Evaluate("revenge", "usable")
 H.equal(status.ready, false, "a later GCD cannot reuse earlier event evidence")
 
 eventWorld.cooldowns[61304].startTime = 100
+eventWorld.cooldowns[6572].isOnGCD = true
 eventSpells.ObserveCooldownEvent()
 status = eventSpells.Evaluate("revenge", "usable")
 H.equal(status.ready, true, "a new cooldown event can establish fresh GCD evidence")
-
-eventWorld.cooldowns[61304].startTime = 102
-status = eventSpells.Evaluate("revenge", "usable")
-H.equal(status.ready, false, "a changed readable GCD start invalidates cached evidence")
 
 gcdWorld.env.C_Spell.IsSpellUsable = function() error("restricted") end
 status = gcd.Evaluate("revenge", "usable")

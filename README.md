@@ -7,7 +7,7 @@ The addon does not cast spells or change bindings.
 
 ## Installation
 
-Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.3.3.zip`.
+Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.3.4.zip`.
 Extract the ZIP into the client's `Interface/AddOns` directory so the manifest is
 `Interface/AddOns/WarriorAssistForever/WarriorAssistForever.toc`. Enable Warrior
 Assist Forever in the AddOns list and log in or reload. LibStub and LibCustomGlow,
@@ -75,13 +75,15 @@ client makes the new buff readable.
 
 Reactive glows require readable learned ranks and client readiness evidence.
 Unknown, secret, malformed, or failing stance, overlay, usability, or cooldown
-data leaves the affected glow dark. An ability-specific cooldown blocks its glow;
-the global cooldown alone does not. The addon uses the client's cooldown duration
-with GCD excluded when available. A native inactive cooldown stays ready even if
-the separate duration object is restricted. When timing values are restricted
-during a GCD, the addon can use Blizzard's GCD flag observed in
-`SPELL_UPDATE_COOLDOWN` while the GCD is active. An unreadable own cooldown
-without that evidence stays dark.
+data leaves the affected glow dark. Following Hunter's Mongoose Bite logic, a
+readable `isOnGCD` flag captured on `SPELL_UPDATE_COOLDOWN` keeps the glow ready
+without requiring a separate global cooldown query. A later cooldown event clears
+that evidence when the flag is false or unreadable. Otherwise, the addon uses the
+client's cooldown duration with GCD excluded when available, then falls back to
+regular cooldown timing. A native inactive cooldown stays ready even if the
+separate duration object is restricted. An unreadable own cooldown without the
+event flag stays dark.
+
 A newly available button that cannot be
 prepared during combat stays dark until a safe update. The client may make
 usability depend on target state even though this addon has no target check.
@@ -163,7 +165,7 @@ lua tests/reactive_spells.lua
 lua tests/reactive_feature.lua
 python3 tests/package.py
 python3 scripts/package.py
-python3 -m zipfile -l dist/WarriorAssistForever-0.3.3.zip
+python3 -m zipfile -l dist/WarriorAssistForever-0.3.4.zip
 ```
 
 The integration check loads the actual bundled LibStub and LibCustomGlow with WoW
