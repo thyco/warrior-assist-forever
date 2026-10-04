@@ -7,7 +7,7 @@ The addon does not cast spells or change bindings.
 
 ## Installation
 
-Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.3.4.zip`.
+Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.3.5.zip`.
 Extract the ZIP into the client's `Interface/AddOns` directory so the manifest is
 `Interface/AddOns/WarriorAssistForever/WarriorAssistForever.toc`. Enable Warrior
 Assist Forever in the AddOns list and log in or reload. LibStub and LibCustomGlow,
@@ -34,10 +34,11 @@ independent Blizzard-native or custom color settings for Battle and Berserker
 Stance. Revenge has its own native or custom color setting. All three reactive
 glow modes use Blizzard's native appearance by default.
 
-In Battle Stance, a learned Overpower must be reported usable and off its own
-cooldown. In Berserker Stance, its spell activation overlay must be reported and
-its own cooldown ready; ordinary castability is not required there. Revenge uses
-client usability and its own cooldown in Defensive Stance. The glows can appear
+In Battle Stance, a learned Overpower must be reported usable or blocked only by
+insufficient rage, and off its own cooldown. In Berserker Stance, its spell
+activation overlay must be reported and its own cooldown ready; ordinary
+castability is not required there. Revenge uses the same rage-independent
+usability signal and its own cooldown in Defensive Stance. The glows can appear
 out of combat and without a target or mouseover. An absent, hidden, or unselected
 button stays dark. Battle Shout remains combat only.
 
@@ -83,7 +84,8 @@ cooldown timing is restricted, the event flag keeps the glow ready for up to
 uses the client's cooldown duration with GCD excluded when available, then falls
 back to regular cooldown timing. A native inactive cooldown stays ready even if
 the separate duration object is restricted. An unreadable own cooldown without
-event evidence stays dark.
+event evidence stays dark. `/waf` reports `low-rage` when the client identifies
+insufficient power as the reason for an otherwise active opportunity.
 
 A newly available button that cannot be
 prepared during combat stays dark until a safe update. The client may make
@@ -136,8 +138,9 @@ These checks remain required; no WoW Forever client was available for local test
 8. Trigger Revenge after a block, dodge, or parry in Defensive Stance. Repeat both
    abilities with no current target and just after leaving combat. Check own
    cooldowns, and trigger another spell's GCD while each opportunity is active;
-   its glow should stay visible until the opportunity ends. Check insufficient
-   rage, stance changes, action bar paging, disabling a
+   its glow should stay visible until the opportunity ends. Lower rage below the
+   ability cost while the proc remains active; the glow should remain and `/waf`
+   should report `low-rage`. Then check stance changes, action bar paging, disabling a
    feature, and `/waf` diagnostics. Confirm glows clear as opportunities end and
    no Lua errors occur. Record whether Forever exposes Berserker Overpower overlay
    and targetless usability; local mocks cannot establish these client behaviors.
@@ -166,7 +169,7 @@ lua tests/reactive_spells.lua
 lua tests/reactive_feature.lua
 python3 tests/package.py
 python3 scripts/package.py
-python3 -m zipfile -l dist/WarriorAssistForever-0.3.4.zip
+python3 -m zipfile -l dist/WarriorAssistForever-0.3.5.zip
 ```
 
 The integration check loads the actual bundled LibStub and LibCustomGlow with WoW

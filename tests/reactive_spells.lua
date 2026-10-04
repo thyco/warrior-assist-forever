@@ -4,6 +4,7 @@ local function setup(learned)
     local world = H.new()
     world.learned = learned or { 7384, 6572 }
     world.usable = {}
+    world.insufficientPower = {}
     world.overlay = {}
     world.cooldowns = {}
     world.names = { [7384] = "Frappe dominante", [6572] = "Revanche", [11584] = "Frappe dominante" }
@@ -24,7 +25,9 @@ local function setup(learned)
     world.env.C_Spell.GetSpellInfo = function(id)
         return world.names[id] and { name = world.names[id] }
     end
-    world.env.C_Spell.IsSpellUsable = function(id) return world.usable[id] end
+    world.env.C_Spell.IsSpellUsable = function(id)
+        return world.usable[id], world.insufficientPower[id] or false
+    end
     world.env.C_Spell.GetSpellCooldown = function(id) return world.cooldowns[id] end
     world.env.C_SpellActivationOverlay = {
         IsSpellOverlayed = function(id) return world.overlay[id] end,
@@ -45,6 +48,37 @@ H.equal(status.ready, true, "readable usability permits learned Overpower")
 H.equal(status.id, 7384)
 H.equal(status.signal, "usable")
 H.equal(status.cooldown, "ready")
+
+local rageWorld, rageSpells = setup()
+rageWorld.usable[7384] = false
+rageWorld.usable[6572] = false
+rageWorld.insufficientPower[7384] = true
+rageWorld.insufficientPower[6572] = true
+rageWorld.cooldowns[7384] = { startTime = 0, duration = 0, isActive = false, isEnabled = true }
+rageWorld.cooldowns[6572] = { startTime = 0, duration = 0, isActive = false, isEnabled = true }
+
+status = rageSpells.Evaluate("overpower", "usable")
+H.equal(status.ready, true, "Overpower opportunity remains active with insufficient rage")
+H.equal(status.signal, "low-rage")
+
+status = rageSpells.Evaluate("revenge", "usable")
+H.equal(status.ready, true, "Revenge opportunity remains active with insufficient rage")
+H.equal(status.signal, "low-rage")
+
+rageWorld.cooldowns[6572] = { startTime = 95, duration = 10, isActive = true, isEnabled = true }
+status = rageSpells.Evaluate("revenge", "usable")
+H.equal(status.ready, false, "insufficient rage does not bypass Revenge's own cooldown")
+
+rageWorld.insufficientPower[7384] = false
+status = rageSpells.Evaluate("overpower", "usable")
+H.equal(status.ready, false, "a missing Overpower proc stays inactive when rage is sufficient")
+
+local hiddenPower = {}
+rageWorld.secret[hiddenPower] = true
+rageWorld.insufficientPower[7384] = hiddenPower
+status = rageSpells.Evaluate("overpower", "usable")
+H.equal(status.ready, false, "restricted power reason cannot invent an Overpower proc")
+H.equal(status.signal, "unknown")
 
 world.usable[7384] = false
 status = spells.Evaluate("overpower", "usable")

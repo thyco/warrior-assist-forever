@@ -98,9 +98,21 @@ end
 
 local function signalFor(id, kind, mode)
     if mode == "usable" then
-        local usable = addon.Client.Boolean(read(spellAPI("IsSpellUsable"), id))
+        local api = spellAPI("IsSpellUsable")
+        if type(api) ~= "function" then return "unknown" end
+
+        local ok, usableValue, powerValue = pcall(api, id)
+        if not ok then return "unknown" end
+
+        local usable = addon.Client.Boolean(usableValue)
         if usable == true then return "usable" end
-        if usable == false then return "inactive" end
+        if usable == false then
+            if not addon.Client.Readable(powerValue) then return "unknown" end
+
+            local insufficientPower = addon.Client.Boolean(powerValue)
+            if insufficientPower == true then return "low-rage" end
+            if insufficientPower == false or powerValue == nil then return "inactive" end
+        end
 
         return "unknown"
     end
@@ -203,13 +215,14 @@ function ReactiveSpells.Evaluate(kind, mode)
     for _, id in ipairs(ranks) do
         local signal = signalFor(id, kind, mode)
         local cooldown = cooldownFor(id)
-        if result.id == nil or (signal == mode and cooldown == "ready") then
+        local opportunity = signal == mode or (mode == "usable" and signal == "low-rage")
+        if result.id == nil or (opportunity and cooldown == "ready") then
             result.id = id
             result.signal = signal
             result.cooldown = cooldown
         end
 
-        if signal == mode and cooldown == "ready" then
+        if opportunity and cooldown == "ready" then
             result.ready = true
             break
         end

@@ -14,7 +14,7 @@ local auraStates = { present = true, missing = true, unknown = true }
 local auraQualities = { exact = true, estimated = true, none = true }
 local outputs = { none = true, ["icon-late"] = true, ["icon-missing"] = true }
 local stances = { battle = true, defensive = true, berserker = true, unknown = true }
-local signals = { usable = true, overlay = true, inactive = true, unknown = true }
+local signals = { usable = true, ["low-rage"] = true, overlay = true, inactive = true, unknown = true }
 local cooldowns = { ready = true, blocked = true, unknown = true }
 
 local function member(container, key)
@@ -85,7 +85,7 @@ local function diagnostics()
         and string.format("%.1fs", math.max(0, deadline - now)) or "unknown"
     local warrior = addon.Client.IsWarrior() and "active" or "inactive"
 
-    print("Warrior Assist Forever 0.3.4 / client 16001 / Warrior " .. warrior)
+    print("Warrior Assist Forever 0.3.5 / client 16001 / Warrior " .. warrior)
     print("Enabled: " .. tostring(addon.Config.Get("battleShoutEnabled"))
         .. " / lead: " .. addon.Config.Get("leadSeconds") .. "s")
     print("Battle Shout: " .. label(aura.state, auraStates, "unknown")

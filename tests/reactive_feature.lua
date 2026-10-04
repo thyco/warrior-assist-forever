@@ -5,6 +5,7 @@ local function setup(options)
     world.time = 100
     world.stanceID = 17
     world.usable = { [7384] = true, [6572] = true }
+    world.insufficientPower = {}
     world.overlay = { [7384] = false, [6572] = false }
     world.cooldowns = {
         [7384] = { startTime = 0, duration = 0, isActive = false, isEnabled = true },
@@ -35,7 +36,9 @@ local function setup(options)
         local names = { [7384] = "Overpower", [6572] = "Revenge", [6673] = "Battle Shout" }
         return names[id] and { name = names[id] }
     end
-    world.env.C_Spell.IsSpellUsable = function(id) return world.usable[id] end
+    world.env.C_Spell.IsSpellUsable = function(id)
+        return world.usable[id], world.insufficientPower[id] or false
+    end
     world.env.C_Spell.GetSpellCooldown = function(id) return world.cooldowns[id] end
     world.env.C_SpellActivationOverlay = {
         IsSpellOverlayed = function(id) return world.overlay[id] end,
@@ -53,6 +56,34 @@ local function reactiveEvent(world, event, ...)
     local frame = world.addon.ReactiveAbilities.frame
     assert(frame.events[event] == true, "event must be registered: " .. event)
     frame.scripts.OnEvent(frame, event, ...)
+end
+
+-- Resource shortage keeps a reactive opportunity visible in its permitted stance.
+do
+    local world, addon = setup()
+    world.usable[7384] = false
+    world.insufficientPower[7384] = true
+    reactiveEvent(world, "SPELL_UPDATE_USABLE")
+
+    H.equal(world.glowActive[world.overpowerButton], true, "Battle Overpower glows with low rage")
+    H.equal(addon.ReactiveAbilities:Status().overpower.signal, "low-rage")
+
+    world.env.SlashCmdList.WARRIORASSISTFOREVER("")
+    local diagnostics = table.concat(world.printed, "\n")
+    assert(diagnostics:find("Overpower: learned / ready / low-rage / ready / bar 1 button 1 / glow active", 1, true))
+
+    world.stanceID = 18
+    world.usable[6572] = false
+    world.insufficientPower[6572] = true
+    reactiveEvent(world, "UPDATE_SHAPESHIFT_FORM")
+
+    H.equal(world.glowActive[world.overpowerButton], false)
+    H.equal(world.glowActive[world.revengeButton], true, "Defensive Revenge glows with low rage")
+    H.equal(addon.ReactiveAbilities:Status().revenge.signal, "low-rage")
+
+    world.insufficientPower[6572] = false
+    reactiveEvent(world, "SPELL_UPDATE_USABLE")
+    H.equal(world.glowActive[world.revengeButton], false, "Revenge clears without a proc or rage shortage")
 end
 
 -- A global cooldown must not hide the currently available ability's glow.
