@@ -1,5 +1,9 @@
 # Warrior Reactive Ability Glows Implementation Plan
 
+Update for v0.4.4 (2026-10-04): Overpower no longer waits for its own cooldown
+when an opportunity is active. This plan records the original implementation;
+see `README.md` for current behavior. Revenge's cooldown rule is unchanged.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add independent, configurable Overpower and Revenge action-button glows to Warrior Assist Forever, including an Overpower opportunity reminder on the player's Berserker Stance macro.

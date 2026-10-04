@@ -1,5 +1,10 @@
 # Warrior Assist Forever: Overpower and Revenge glows
 
+Update for v0.4.4 (2026-10-04): Overpower now glows during its own cooldown
+while its Battle Stance usability or Berserker Stance overlay opportunity is
+active. The cooldown requirements below record the original design. Revenge
+still requires its own cooldown to be ready. See `README.md` for current behavior.
+
 ## Purpose and scope
 
 Add two independent reactive ability glows to the existing Warrior Assist Forever addon. The player chooses one fixed default action bar/button position for Overpower and another for Revenge. The Overpower position may contain the player's macro that switches from Berserker Stance to Battle Stance and casts Overpower. A glow marks a supported ability opportunity; it does not cast a spell, change stance, choose a target, modify bindings, or change the action button's protected attributes. Battle Shout's CDM and screen icon reminder keeps its current behavior.

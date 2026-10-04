@@ -314,7 +314,9 @@ do
     reactiveEvent(world, "SPELL_UPDATE_USABLE")
     H.equal(world.glowActive[world.overpowerButton], true)
 
-    world.cooldowns[7384] = world.secret
+    local restrictedCooldown = {}
+    world.secret[restrictedCooldown] = true
+    world.cooldowns[7384] = restrictedCooldown
     reactiveEvent(world, "SPELL_UPDATE_COOLDOWN")
     H.equal(world.glowActive[world.overpowerButton], true, "unreadable cooldown does not hide Overpower opportunity")
 end
