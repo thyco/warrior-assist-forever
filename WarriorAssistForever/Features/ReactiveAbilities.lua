@@ -80,7 +80,7 @@ function ReactiveAbilities:Initialize()
                 addon.ReactiveSpells.Rebuild()
             end
 
-            self:Refresh(event == "SPELL_UPDATE_COOLDOWN")
+            self:Refresh()
         end)
     end
 
@@ -93,7 +93,7 @@ function ReactiveAbilities:Initialize()
     self:Refresh()
 end
 
-function ReactiveAbilities:Refresh(cooldownEvent)
+function ReactiveAbilities:Refresh()
     if not self.running then
         return
     end
@@ -121,7 +121,7 @@ function ReactiveAbilities:Refresh(cooldownEvent)
         local status = emptyStatus()
         local mode = definition.modes[stance]
         if addon.Config.Get(definition.enabled) and mode and shown then
-            local result = addon.ReactiveSpells.Evaluate(kind, mode, cooldownEvent)
+            local result = addon.ReactiveSpells.Evaluate(kind, mode)
             status.ready = result.ready
             status.signal = result.signal
             status.cooldown = result.cooldown
@@ -142,7 +142,7 @@ function ReactiveAbilities:Refresh(cooldownEvent)
                 self.elapsed = self.elapsed + elapsed
                 if self.elapsed >= 0.1 then
                     self.elapsed = 0
-                    self:Refresh(false)
+                    self:Refresh()
                 end
             end)
             self.polling = true

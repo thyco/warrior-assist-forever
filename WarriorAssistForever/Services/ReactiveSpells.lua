@@ -1,5 +1,5 @@
 local _, addon = ...
-local ReactiveSpells = { ids = { overpower = {}, revenge = {} }, gcdOnly = {} }
+local ReactiveSpells = { ids = { overpower = {}, revenge = {} } }
 addon.ReactiveSpells = ReactiveSpells
 
 local seeds = { overpower = 7384, revenge = 6572 }
@@ -42,7 +42,6 @@ function ReactiveSpells.Rebuild()
     local names = {}
     local seen = { overpower = {}, revenge = {} }
     ReactiveSpells.ids = { overpower = {}, revenge = {} }
-    ReactiveSpells.gcdOnly = {}
 
     for kind, seed in pairs(seeds) do
         names[kind] = spellName(seed)
@@ -86,14 +85,10 @@ local function signalFor(id, kind, mode)
     return "unknown"
 end
 
-local function cooldownFor(id, cooldownEvent)
+local function cooldownFor(id)
     local info = read(spellAPI("GetSpellCooldown"), id)
-    if addon.Client.Boolean(cooldownEvent) == true then
-        ReactiveSpells.gcdOnly[id] = nil
-    end
 
     if type(info) ~= "table" then
-        ReactiveSpells.gcdOnly[id] = nil
         return "unknown"
     end
 
@@ -103,11 +98,8 @@ local function cooldownFor(id, cooldownEvent)
     local active = addon.Client.Boolean(member(info, "isActive"))
     local onGCD = addon.Client.Boolean(member(info, "isOnGCD"))
     if active == false or onGCD == true then
-        ReactiveSpells.gcdOnly[id] = onGCD == true or nil
         return "ready"
     end
-
-    ReactiveSpells.gcdOnly[id] = nil
 
     local start = nonnegative(member(info, "startTime"))
     local duration = nonnegative(member(info, "duration"))
@@ -130,7 +122,7 @@ local function cooldownFor(id, cooldownEvent)
     return "blocked"
 end
 
-function ReactiveSpells.Evaluate(kind, mode, cooldownEvent)
+function ReactiveSpells.Evaluate(kind, mode)
     local result = { ready = false, learned = false, id = nil, signal = "unknown", cooldown = "unknown" }
     if not addon.Client.Readable(kind) or not addon.Client.Readable(mode)
         or type(kind) ~= "string" or type(mode) ~= "string"
@@ -145,7 +137,7 @@ function ReactiveSpells.Evaluate(kind, mode, cooldownEvent)
 
     for _, id in ipairs(ranks) do
         local signal = signalFor(id, kind, mode)
-        local cooldown = cooldownFor(id, cooldownEvent)
+        local cooldown = cooldownFor(id)
         if result.id == nil or (signal == mode and cooldown == "ready") then
             result.id = id
             result.signal = signal

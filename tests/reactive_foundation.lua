@@ -79,6 +79,7 @@ for index, position in ipairs(positions) do
 
     local button = world:newFrame()
     world.env[position[1] .. "1"] = button
+
     H.equal(addon.Buttons.Selected(index, 1), button)
 end
 
@@ -92,7 +93,9 @@ H.equal(addon.Buttons.Selected(1, 13), nil)
 H.equal(addon.Buttons.Selected(1.5, 1), nil)
 
 world.secret[2] = true
+
 H.equal(addon.Buttons.Selected(2, 1), nil)
+
 world.secret[2] = nil
 
 world.env.GetShapeshiftFormID = function() return 17 end
@@ -123,7 +126,9 @@ H.equal(addon.Stance.Current(), "unknown")
 H.equal(addon.Client.Boolean(true), true)
 H.equal(addon.Client.Boolean(0), false)
 H.equal(addon.Client.Boolean(nil), nil)
+
 world.secret[true] = true
+
 H.equal(addon.Client.Boolean(true), nil)
 
 local spellWorld = H.new()
@@ -147,20 +152,27 @@ spellWorld.env.C_SpellBook = {
 }
 
 local spells = spellAddon.Client.PlayerSpells()
+
 H.equal(#spells, 1)
 H.equal(spells[1].id, 7384)
+
 spellWorld.env.C_SpellBook.GetNumSpellBookSkillLines = function() error("restricted") end
+
 H.equal(#spellAddon.Client.PlayerSpells(), 0)
+
 spellWorld.env.C_SpellBook.GetNumSpellBookSkillLines = function() return 1 end
 spellWorld.env.C_SpellBook.GetSpellBookSkillLineInfo = function() return { itemIndexOffset = 0, numSpellBookItems = 1 } end
 spellWorld.env.C_SpellBook.GetSpellBookItemInfo = function() return { itemType = 1, isPassive = false, isOffSpec = false, spellID = 7384 } end
 spellWorld.secret[7384] = true
+
 H.equal(#spellAddon.Client.PlayerSpells(), 0)
+
 spellWorld.secret[7384] = nil
 
 local restrictedBook = setmetatable({}, { __index = function() error("restricted spellbook") end })
 spellWorld.secret[restrictedBook] = true
 spellWorld.env.C_SpellBook = restrictedBook
+
 H.equal(#spellAddon.Client.PlayerSpells(), 0)
 
 spellWorld.env.C_SpellBook = {
@@ -168,15 +180,18 @@ spellWorld.env.C_SpellBook = {
     GetSpellBookSkillLineInfo = function() return { itemIndexOffset = 0, numSpellBookItems = 1 } end,
     GetSpellBookItemInfo = function() return { itemType = 1, isPassive = false, isOffSpec = false, spellID = 7384 } end,
 }
+
 local restrictedLine = setmetatable({}, { __index = function() error("restricted line") end })
 spellWorld.secret[restrictedLine] = true
 spellWorld.env.C_SpellBook.GetSpellBookSkillLineInfo = function() return restrictedLine end
+
 H.equal(#spellAddon.Client.PlayerSpells(), 0)
 
 spellWorld.env.C_SpellBook.GetSpellBookSkillLineInfo = function() return { itemIndexOffset = 0, numSpellBookItems = 1 } end
 local restrictedItem = setmetatable({}, { __index = function() error("restricted item") end })
 spellWorld.secret[restrictedItem] = true
 spellWorld.env.C_SpellBook.GetSpellBookItemInfo = function() return restrictedItem end
+
 H.equal(#spellAddon.Client.PlayerSpells(), 0)
 
 spellWorld.env.C_SpellBook.GetSpellBookItemInfo = function()
@@ -185,16 +200,22 @@ end
 local normalBook = spellWorld.env.C_SpellBook
 local normalEnum = spellWorld.env.Enum
 spellWorld.secret[normalBook] = true
+
 H.equal(#spellAddon.Client.PlayerSpells(), 0, "secret spellbook global")
+
 spellWorld.secret[normalBook] = nil
 
 spellWorld.secret[normalEnum] = true
+
 H.equal(#spellAddon.Client.PlayerSpells(), 0, "secret enum global")
+
 spellWorld.secret[normalEnum] = nil
 
 local normalBanks = normalEnum.SpellBookSpellBank
 spellWorld.secret[normalBanks] = true
+
 H.equal(#spellAddon.Client.PlayerSpells(), 0, "secret bank table")
+
 spellWorld.secret[normalBanks] = nil
 
 spellWorld.env.C_SpellBook.GetSpellBookItemInfo = function()

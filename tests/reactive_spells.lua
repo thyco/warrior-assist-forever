@@ -40,25 +40,25 @@ local world, spells = setup()
 world.usable[7384] = true
 world.cooldowns[7384] = { startTime = 0, duration = 0, isActive = false, isEnabled = true }
 
-local status = spells.Evaluate("overpower", "usable", false)
+local status = spells.Evaluate("overpower", "usable")
 H.equal(status.ready, true, "readable usability permits learned Overpower")
 H.equal(status.id, 7384)
 H.equal(status.signal, "usable")
 H.equal(status.cooldown, "ready")
 
 world.usable[7384] = false
-status = spells.Evaluate("overpower", "usable", false)
+status = spells.Evaluate("overpower", "usable")
 H.equal(status.ready, false, "false usability clears readiness")
 H.equal(status.signal, "inactive")
 
 world.usable[7384] = true
 world.cooldowns[7384] = { startTime = 95, duration = 10, isActive = true, isEnabled = true }
-status = spells.Evaluate("overpower", "usable", false)
+status = spells.Evaluate("overpower", "usable")
 H.equal(status.ready, false, "own cooldown blocks")
 H.equal(status.cooldown, "blocked")
 
 world.time = 106
-status = spells.Evaluate("overpower", "usable", false)
+status = spells.Evaluate("overpower", "usable")
 H.equal(status.ready, true, "expired own cooldown permits")
 
 local higherWorld, higher = setup({ 11584, 11584 })
@@ -68,25 +68,25 @@ higherWorld.overlay[7384] = true
 higherWorld.usable[7384] = false
 
 H.equal(#higher.ids.overpower, 1, "duplicate ranks are removed")
-status = higher.Evaluate("overpower", "overlay", false)
+status = higher.Evaluate("overpower", "overlay")
 H.equal(status.ready, true, "base overlay works with learned higher rank")
 H.equal(status.id, 11584)
 H.equal(status.signal, "overlay")
 
 higherWorld.overlay[7384] = false
 higherWorld.overlay[11584] = false
-status = higher.Evaluate("overpower", "overlay", false)
+status = higher.Evaluate("overpower", "overlay")
 H.equal(status.ready, false, "false overlay clears readiness")
 H.equal(status.signal, "inactive")
 
 higherWorld.overlay[11584] = true
 higherWorld.usable[11584] = false
-status = higher.Evaluate("overpower", "overlay", false)
+status = higher.Evaluate("overpower", "overlay")
 H.equal(status.ready, true, "overlay does not require castability")
 
 local absentWorld, absent = setup({ 6572 })
 absentWorld.overlay[7384] = true
-status = absent.Evaluate("overpower", "overlay", false)
+status = absent.Evaluate("overpower", "overlay")
 H.equal(status.learned, false, "seed overlay cannot create an unlearned spell")
 H.equal(status.ready, false)
 H.equal(status.id, nil)
@@ -95,31 +95,31 @@ local gcdWorld, gcd = setup({ 6572 })
 gcdWorld.usable[6572] = true
 gcdWorld.cooldowns[6572] = { startTime = 100, duration = 1.5, isActive = true }
 gcdWorld.cooldowns[61304] = { startTime = 100, duration = 1.5, isActive = true }
-status = gcd.Evaluate("revenge", "usable", true)
+status = gcd.Evaluate("revenge", "usable")
 H.equal(status.ready, true, "matching global cooldown is not own cooldown")
 
 gcdWorld.cooldowns[6572] = { isOnGCD = true, startTime = 100, duration = 1.5 }
 gcdWorld.cooldowns[61304] = nil
-status = gcd.Evaluate("revenge", "usable", true)
+status = gcd.Evaluate("revenge", "usable")
 H.equal(status.ready, true, "explicit GCD flag permits")
 
 gcdWorld.cooldowns[6572] = { isOnGCD = gcdWorld.secret, startTime = gcdWorld.secret, duration = gcdWorld.secret }
-status = gcd.Evaluate("revenge", "usable", true)
-H.equal(status.ready, false, "unreadable cooldown event clears GCD evidence")
+status = gcd.Evaluate("revenge", "usable")
+H.equal(status.ready, false, "unreadable cooldown evidence clears GCD readiness")
 H.equal(status.cooldown, "unknown")
 
 gcdWorld.env.C_Spell.IsSpellUsable = function() error("restricted") end
-status = gcd.Evaluate("revenge", "usable", false)
+status = gcd.Evaluate("revenge", "usable")
 H.equal(status.ready, false, "throwing usability clears signal")
 H.equal(status.signal, "unknown")
 
-status = gcd.Evaluate("invalid", "overlay", false)
+status = gcd.Evaluate("invalid", "overlay")
 H.equal(status.ready, false)
 H.equal(status.signal, "unknown")
 
 local secretKind = "restricted kind"
 gcdWorld.secret[secretKind] = true
-status = gcd.Evaluate(secretKind, "usable", false)
+status = gcd.Evaluate(secretKind, "usable")
 H.equal(status.ready, false, "restricted kind is rejected")
 H.equal(status.signal, "unknown")
 

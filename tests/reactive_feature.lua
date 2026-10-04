@@ -115,6 +115,49 @@ do
     H.equal(world.glowActive[world.overpowerButton], false)
 end
 
+-- Spellbook changes remove and restore the learned Overpower opportunity.
+do
+    local world = setup()
+
+    H.equal(world.glowActive[world.overpowerButton], true)
+
+    world.env.C_SpellBook.GetSpellBookSkillLineInfo = function()
+        return { itemIndexOffset = 0, numSpellBookItems = 1 }
+    end
+    world.env.C_SpellBook.GetSpellBookItemInfo = function()
+        return { itemType = 1, isPassive = false, isOffSpec = false, spellID = 6572 }
+    end
+
+    reactiveEvent(world, "SPELLS_CHANGED")
+
+    H.equal(world.glowActive[world.overpowerButton], false, "unlearned Overpower clears on spellbook event")
+
+    world.env.C_SpellBook.GetSpellBookItemInfo = function()
+        return { itemType = 1, isPassive = false, isOffSpec = false, spellID = 7384 }
+    end
+
+    reactiveEvent(world, "SPELLS_CHANGED")
+
+    H.equal(world.glowActive[world.overpowerButton], true, "learned Overpower returns on spellbook event")
+end
+
+-- Overlay hide clears the active Berserker glow through the feature event frame.
+do
+    local world = setup()
+    world.stanceID = 19
+    world.overlay[7384] = true
+
+    reactiveEvent(world, "SPELL_ACTIVATION_OVERLAY_GLOW_SHOW", 7384)
+
+    H.equal(world.glowActive[world.overpowerButton], true)
+
+    world.overlay[7384] = false
+
+    reactiveEvent(world, "SPELL_ACTIVATION_OVERLAY_GLOW_HIDE", 7384)
+
+    H.equal(world.glowActive[world.overpowerButton], false, "overlay hide clears Berserker glow")
+end
+
 do
     local world, addon = setup()
     world.cooldowns[7384] = { startTime = 100, duration = 2, isActive = true, isEnabled = true }
