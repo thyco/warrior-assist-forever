@@ -1,5 +1,5 @@
 local _, addon = ...
-local ReactiveSpells = { ids = { overpower = {}, revenge = {} }, gcdOnly = {} }
+local ReactiveSpells = { ids = { overpower = {}, revenge = {} }, gcdOnly = {}, gcdStart = nil }
 addon.ReactiveSpells = ReactiveSpells
 
 local seeds = { overpower = 7384, revenge = 6572 }
@@ -52,6 +52,7 @@ function ReactiveSpells.Rebuild()
     local seen = { overpower = {}, revenge = {} }
     ReactiveSpells.ids = { overpower = {}, revenge = {} }
     ReactiveSpells.gcdOnly = {}
+    ReactiveSpells.gcdStart = nil
 
     for kind, seed in pairs(seeds) do
         names[kind] = spellName(seed)
@@ -79,6 +80,14 @@ end
 
 function ReactiveSpells.ObserveCooldownEvent()
     ReactiveSpells.gcdOnly = {}
+    ReactiveSpells.gcdStart = nil
+
+    local gcd = read(spellAPI("GetSpellCooldown"), 61304)
+    if addon.Client.Boolean(member(gcd, "isActive")) ~= true then
+        return
+    end
+
+    ReactiveSpells.gcdStart = nonnegative(member(gcd, "startTime"))
 
     for _, ranks in pairs(ReactiveSpells.ids) do
         for _, id in ipairs(ranks) do
@@ -114,7 +123,16 @@ local function eventGCDReady(id)
     end
 
     local gcd = read(spellAPI("GetSpellCooldown"), 61304)
-    return addon.Client.Boolean(member(gcd, "isActive")) == true
+    local active = addon.Client.Boolean(member(gcd, "isActive"))
+    local start = nonnegative(member(gcd, "startTime"))
+    if active ~= true or (ReactiveSpells.gcdStart and start ~= ReactiveSpells.gcdStart) then
+        ReactiveSpells.gcdOnly = {}
+        ReactiveSpells.gcdStart = nil
+
+        return false
+    end
+
+    return true
 end
 
 local function cooldownFor(id)

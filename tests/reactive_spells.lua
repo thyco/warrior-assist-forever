@@ -191,6 +191,19 @@ eventWorld.cooldowns[61304].isActive = false
 status = eventSpells.Evaluate("revenge", "usable")
 H.equal(status.ready, false, "cached GCD evidence expires when the global cooldown ends")
 
+eventWorld.cooldowns[61304].isActive = true
+status = eventSpells.Evaluate("revenge", "usable")
+H.equal(status.ready, false, "a later GCD cannot reuse earlier event evidence")
+
+eventWorld.cooldowns[61304].startTime = 100
+eventSpells.ObserveCooldownEvent()
+status = eventSpells.Evaluate("revenge", "usable")
+H.equal(status.ready, true, "a new cooldown event can establish fresh GCD evidence")
+
+eventWorld.cooldowns[61304].startTime = 102
+status = eventSpells.Evaluate("revenge", "usable")
+H.equal(status.ready, false, "a changed readable GCD start invalidates cached evidence")
+
 gcdWorld.env.C_Spell.IsSpellUsable = function() error("restricted") end
 status = gcd.Evaluate("revenge", "usable")
 H.equal(status.ready, false, "throwing usability clears signal")
