@@ -5,10 +5,17 @@ addon.ReactiveAbilities = ReactiveAbilities
 local definitions = {
     overpower = { owner = "overpower", enabled = "overpowerEnabled",
         bar = "overpowerBar", button = "overpowerButton",
-        modes = { battle = "usable", berserker = "overlay" } },
+        modes = { battle = "usable", berserker = "overlay" },
+        colors = {
+            battle = { native = "overpowerBattleNativeColor", custom = "overpowerBattleGlowColor" },
+            berserker = { native = "overpowerBerserkerNativeColor", custom = "overpowerBerserkerGlowColor" },
+        } },
     revenge = { owner = "revenge", enabled = "revengeEnabled",
         bar = "revengeBar", button = "revengeButton",
-        modes = { defensive = "usable" } },
+        modes = { defensive = "usable" },
+        colors = {
+            defensive = { native = "revengeNativeColor", custom = "revengeGlowColor" },
+        } },
 }
 local order = { "overpower", "revenge" }
 local events = {
@@ -104,6 +111,14 @@ function ReactiveAbilities:Refresh()
 
     for _, kind in ipairs(order) do
         local definition = definitions[kind]
+        local style = definition.colors[stance]
+        local color
+        if style and not addon.Config.Get(style.native) then
+            color = addon.Config.GetColor(style.custom)
+        end
+
+        addon.Glow.ConfigureOwner(definition.owner, { color = color })
+
         local button = selected(definition)
         local previous = self.buttons and self.buttons[kind]
         if previous and previous ~= button then

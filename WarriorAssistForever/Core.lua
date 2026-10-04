@@ -25,7 +25,6 @@ function addon:Start()
     self.BattleShoutIcon:Initialize()
     self:RegisterFeature(self.BattleShoutReminder)
     self.BattleShoutReminder:Initialize()
-    self.CDM.Prepare(self.BattleShoutAura.name)
     self.ReactiveAbilities:Initialize()
 
     self.Config.Subscribe(function()

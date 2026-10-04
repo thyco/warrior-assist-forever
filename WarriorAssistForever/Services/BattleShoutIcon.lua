@@ -11,7 +11,7 @@ function Icon:Initialize()
     local frame = CreateFrame("Frame", "WarriorAssistForeverBattleShoutIcon", UIParent)
     self.frame = frame
     frame:SetSize(64, 64)
-    frame:SetFrameStrata("MEDIUM")
+    frame:SetFrameStrata("DIALOG")
     frame:SetMovable(true)
     frame:SetClampedToScreen(true)
     frame:RegisterForDrag("LeftButton")
@@ -46,9 +46,17 @@ function Icon:ApplySettings()
         return
     end
 
+    local size = addon.Config.Get("iconSize")
+    self.frame:SetSize(size, size)
     self.frame:ClearAllPoints()
     self.frame:SetPoint("CENTER", UIParent, "CENTER", addon.Config.Get("iconX"), addon.Config.Get("iconY"))
-    addon.Glow.ConfigureOwner(owner, { color = addon.Config.GetColor("glowColor") })
+
+    local color
+    if not addon.Config.Get("battleShoutNativeColor") then
+        color = addon.Config.GetColor("glowColor")
+    end
+
+    addon.Glow.ConfigureOwner(owner, { color = color })
     addon.Glow.Prepare(self.frame)
     self:Render()
 end
@@ -68,7 +76,7 @@ function Icon:SetPreview(enabled)
         self.frame:StopMovingOrSizing()
     end
 
-    self.frame:SetFrameStrata(self.preview and "TOOLTIP" or "MEDIUM")
+    self.frame:SetFrameStrata(self.preview and "TOOLTIP" or "DIALOG")
     self.frame:EnableMouse(self.preview)
     self:Render()
 end

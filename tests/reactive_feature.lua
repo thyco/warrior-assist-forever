@@ -260,9 +260,50 @@ do
     world.time = 100
     world.combat = true
     world:fire("PLAYER_REGEN_DISABLED")
-    H.equal(world.glowActive[item], true, "Battle Shout owner remains active")
+    H.equal(world.glowActive[item], nil, "CDM receives no Battle Shout glow")
+    H.equal(world.glowActive[addon.BattleShoutIcon.frame], true, "Battle Shout icon remains active")
     H.equal(world.glowActive[world.overpowerButton], true, "reactive owner remains active")
-    H.equal(addon.BattleShoutReminder:Status().output, "cdm")
+    H.equal(addon.BattleShoutReminder:Status().output, "icon-late")
+end
+
+-- Battle and Berserker Overpower keep independent native/custom choices.
+do
+    local world, addon = setup()
+    local entry = addon.Glow.Prepare(world.overpowerButton)
+    H.equal(world.glows[entry.frame].color, nil, "Battle defaults to native glow")
+
+    addon.Config.Set("overpowerBattleNativeColor", false)
+    addon.Config.Set("overpowerBattleGlowColor", "ff0000ff")
+    H.equal(world.glows[entry.frame].color[3], 1, "Battle uses its blue custom glow")
+
+    world.stanceID = 19
+    world.overlay[7384] = true
+    reactiveEvent(world, "UPDATE_SHAPESHIFT_FORM")
+    H.equal(world.glows[entry.frame].color, nil, "Berserker remains native by default")
+
+    addon.Config.Set("overpowerBerserkerNativeColor", false)
+    addon.Config.Set("overpowerBerserkerGlowColor", "ffff0000")
+    H.equal(world.glows[entry.frame].color[1], 1, "Berserker uses its red custom glow")
+
+    world.stanceID = 17
+    reactiveEvent(world, "UPDATE_SHAPESHIFT_FORM")
+    H.equal(world.glows[entry.frame].color[3], 1, "Battle color returns on stance change")
+end
+
+-- Revenge can switch between its own custom color and native artwork.
+do
+    local world, addon = setup()
+    world.stanceID = 18
+    reactiveEvent(world, "UPDATE_SHAPESHIFT_FORM")
+    local entry = addon.Glow.Prepare(world.revengeButton)
+    H.equal(world.glows[entry.frame].color, nil, "Revenge defaults to native glow")
+
+    addon.Config.Set("revengeNativeColor", false)
+    addon.Config.Set("revengeGlowColor", "ffff0000")
+    H.equal(world.glows[entry.frame].color[1], 1, "Revenge uses custom red")
+
+    addon.Config.Set("revengeNativeColor", true)
+    H.equal(world.glows[entry.frame].color, nil, "Revenge restores native glow")
 end
 
 print("reactive feature: PASS")

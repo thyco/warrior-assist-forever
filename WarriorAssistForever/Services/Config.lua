@@ -5,18 +5,32 @@ addon.Config = Config
 local defaults = {
     battleShoutEnabled = true,
     leadSeconds = 10,
+    battleShoutNativeColor = false,
     glowColor = "ff00ff00",
+    iconSize = 64,
     iconX = 0,
     iconY = -270,
     overpowerEnabled = true,
     overpowerBar = 0,
     overpowerButton = 1,
+    overpowerBattleNativeColor = true,
+    overpowerBattleGlowColor = "ffffd24a",
+    overpowerBerserkerNativeColor = true,
+    overpowerBerserkerGlowColor = "ffff0000",
     revengeEnabled = true,
     revengeBar = 0,
     revengeButton = 1,
+    revengeNativeColor = true,
+    revengeGlowColor = "ff00bfa5",
 }
 local values
 local listeners = {}
+local colorKeys = {
+    glowColor = true,
+    overpowerBattleGlowColor = true,
+    overpowerBerserkerGlowColor = true,
+    revengeGlowColor = true,
+}
 
 local function validValue(key, value)
     if issecretvalue and issecretvalue(value) then
@@ -39,7 +53,11 @@ local function validValue(key, value)
         return value >= 1 and value <= 60 and value == math.floor(value)
     end
 
-    if key == "glowColor" then
+    if key == "iconSize" then
+        return value >= 16 and value <= 128 and value % 4 == 0
+    end
+
+    if colorKeys[key] then
         return #value == 8 and value:match("^%x+$") ~= nil
     end
 
@@ -51,7 +69,7 @@ local function validValue(key, value)
 end
 
 local function normalize(key, value)
-    if key == "glowColor" then
+    if colorKeys[key] then
         return "ff" .. value:sub(3):lower()
     end
 

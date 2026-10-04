@@ -24,6 +24,10 @@ do
     H.equal(addon.SettingsPanel.controls.leadSeconds.options[1].value, 1)
     H.equal(addon.SettingsPanel.controls.leadSeconds.options[60].value, 60)
     H.equal(addon.Config.Get("glowColor"), "ff00ff00")
+    H.equal(addon.SettingsPanel.controls.battleShoutNativeColor.checked, false)
+    H.equal(addon.SettingsPanel.controls.iconSize.selectedValue, 64)
+    H.equal(addon.SettingsPanel.controls.iconSize.options[1].value, 16)
+    H.equal(addon.SettingsPanel.controls.iconSize.options[29].value, 128)
 
     H.equal(world.env.SLASH_WARRIORASSISTFOREVER1, "/waf")
     world.env.SlashCmdList.WARRIORASSISTFOREVER("config")
@@ -32,11 +36,14 @@ do
     assert(table.concat(world.printed, "\n"):find("Warrior inactive", 1, true))
 end
 
--- Each reactive ability owns three native settings and persists its own selection.
+-- Reactive abilities expose independent button and color settings.
 do
     local world, addon = setup()
     local keys = { "overpowerEnabled", "overpowerBar", "overpowerButton",
-        "revengeEnabled", "revengeBar", "revengeButton" }
+        "overpowerBattleNativeColor", "overpowerBattleGlowColor",
+        "overpowerBerserkerNativeColor", "overpowerBerserkerGlowColor",
+        "revengeEnabled", "revengeBar", "revengeButton",
+        "revengeNativeColor", "revengeGlowColor" }
 
     for _, key in ipairs(keys) do
         assert(world.settings["WarriorAssistForever_" .. key], key .. " setting missing")
@@ -66,6 +73,23 @@ do
     H.equal(world.env.WarriorAssistForeverDB.overpowerEnabled, false)
     H.equal(world.env.WarriorAssistForeverDB.revengeEnabled, true)
     H.equal(addon.SettingsPanel.controls.revengeBar.text, "Left bar (second right bar)")
+    H.equal(addon.SettingsPanel.controls.overpowerBattleNativeColor.checked, true)
+    H.equal(addon.SettingsPanel.controls.overpowerBerserkerNativeColor.checked, true)
+    H.equal(addon.SettingsPanel.controls.revengeNativeColor.checked, true)
+end
+
+-- The stance color picker persists a selection and Cancel restores it.
+do
+    local world, addon = setup()
+    local original = addon.Config.Get("overpowerBattleGlowColor")
+    world.env.ColorPickerFrame.GetColorRGB = function() return 0, 0, 1 end
+
+    addon.SettingsPanel.controls.overpowerBattleGlowColor.scripts.OnClick()
+    world.env.ColorPickerFrame.options.swatchFunc()
+    H.equal(addon.Config.Get("overpowerBattleGlowColor"), "ff0000ff")
+
+    world.env.ColorPickerFrame.options.cancelFunc()
+    H.equal(addon.Config.Get("overpowerBattleGlowColor"), original)
 end
 
 -- Move preview starts from settings and stops when the panel closes.
@@ -76,6 +100,18 @@ do
     H.equal(addon.BattleShoutIcon.preview, true)
     addon.SettingsPanel.canvas.scripts.OnHide()
     H.equal(addon.BattleShoutIcon.preview, false)
+end
+
+-- Battle Shout icon size changes the actual reminder frame and persists.
+do
+    local world, addon = setup()
+
+    H.equal(addon.BattleShoutIcon.frame.width, 64)
+    addon.SettingsPanel.settings.iconSize:SetValue(36)
+
+    H.equal(addon.BattleShoutIcon.frame.width, 36)
+    H.equal(addon.BattleShoutIcon.frame.height, 36)
+    H.equal(world.env.WarriorAssistForeverDB.iconSize, 36)
 end
 
 -- Changing the swatch recolors an active glow without showing its overlay again.
@@ -95,6 +131,11 @@ do
     H.equal(world.glows[entry.frame].color[2], 0)
     H.equal(entry.frame.showCount, shows)
     H.equal(world.glowActive[addon.BattleShoutIcon.frame], true)
+
+    addon.SettingsPanel.settings.battleShoutNativeColor:SetValue(true)
+    H.equal(world.glows[entry.frame].color, nil, "Battle Shout switches to native glow")
+    addon.SettingsPanel.settings.battleShoutNativeColor:SetValue(false)
+    H.equal(world.glows[entry.frame].color[1], 1, "custom picker color returns")
 end
 
 -- Settings apply immediately, including disabling a visible combat warning.
@@ -112,13 +153,10 @@ do
     H.equal(addon.Config.Get("leadSeconds"), 60)
 end
 
--- Diagnostics report the current aura timing and CDM output.
+-- Diagnostics report current aura timing and icon output.
 do
-    local item
     local world, addon = setup(function(w)
         w.auras = { { name = "Battle Shout", expirationTime = 180 } }
-        item = w:newCDMItem(42, 6673, true)
-        w:setCDMItems({ item })
     end)
     world.time, world.combat = 170, true
     world:fire("PLAYER_REGEN_DISABLED")
@@ -126,7 +164,7 @@ do
     world.env.SlashCmdList.WARRIORASSISTFOREVER("")
     local result = table.concat(world.printed, "\n")
     assert(result:find("Battle Shout: present / exact / due in 10.0s", 1, true))
-    assert(result:find("CDM: visible / output: cdm", 1, true))
+    assert(result:find("Reminder: icon-late", 1, true))
 end
 
 -- Diagnostics must use bounded labels even if an API status is tainted.
@@ -136,15 +174,15 @@ do
         return { state = "secret\nBAD", quality = "secret", deadline = math.huge }
     end
     addon.BattleShoutReminder.Status = function()
-        return { cdmStatus = "secret", output = "secret" }
+        return { output = "secret" }
     end
 
     world.env.SlashCmdList.WARRIORASSISTFOREVER("")
     local result = table.concat(world.printed, "\n")
-    assert(result:find("Warrior Assist Forever 0.2.1 / client 16001 / Warrior active", 1, true))
+    assert(result:find("Warrior Assist Forever 0.3.0 / client 16001 / Warrior active", 1, true))
     assert(result:find("Enabled: true / lead: 10s", 1, true))
     assert(result:find("Battle Shout: unknown / none / due in unknown", 1, true))
-    assert(result:find("CDM: unavailable / output: none", 1, true))
+    assert(result:find("Reminder: none", 1, true))
     assert(not result:find("secret", 1, true))
     assert(not result:find("BAD", 1, true))
 end
@@ -160,7 +198,7 @@ do
     world.env.SlashCmdList.WARRIORASSISTFOREVER("")
     local result = table.concat(world.printed, "\n")
     assert(result:find("Battle Shout: unknown / none / due in unknown", 1, true))
-    assert(result:find("output: none", 1, true))
+    assert(result:find("Reminder: none", 1, true))
 end
 
 -- Malformed persisted values restore independent safe defaults.
@@ -168,6 +206,7 @@ do
     local world, addon = setup(function(w)
         w.env.WarriorAssistForeverDB = {
             leadSeconds = -1, glowColor = "zzyyxxww", iconX = math.huge, iconY = 100000,
+            iconSize = 25, overpowerBattleGlowColor = "bad", revengeNativeColor = "yes",
         }
     end)
 
@@ -175,6 +214,9 @@ do
     H.equal(addon.Config.Get("glowColor"), "ff00ff00")
     H.equal(addon.Config.Get("iconX"), 0)
     H.equal(addon.Config.Get("iconY"), -270)
+    H.equal(addon.Config.Get("iconSize"), 64)
+    H.equal(addon.Config.Get("overpowerBattleGlowColor"), "ffffd24a")
+    H.equal(addon.Config.Get("revengeNativeColor"), true)
 end
 
 print("settings: PASS")

@@ -2,7 +2,7 @@
 ## Title: Warrior Assist Forever
 ## Notes: Battle Shout reminder and reactive Overpower/Revenge glows for Warriors.
 ## Author: Warrior Assist Forever
-## Version: 0.2.1
+## Version: 0.3.0
 ## IconTexture: Interface\AddOns\WarriorAssistForever\Media\Warrior.tga
 ## OptionalDeps: LibCustomGlow-1.0
 ## SavedVariables: WarriorAssistForeverDB
@@ -19,7 +19,6 @@ Services/ReactiveSpells.lua
 Services/Timers.lua
 Services/BattleShoutAura.lua
 Services/Glow.lua
-Services/CDM.lua
 Services/BattleShoutIcon.lua
 Services/SettingsWidgets.lua
 Features/BattleShoutReminder.lua

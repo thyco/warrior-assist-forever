@@ -41,58 +41,21 @@ do
     output(addon, "icon-late")
 end
 
--- A prepared CDM item wins; hiding/repooling releases its glow.
+-- A visible CDM buff never replaces the movable screen reminder.
 do
     local item
     local world, addon = setup(function(w)
         present(w, 180)
         item = w:newCDMItem(42, 6673, true)
         w:setCDMItems({ item })
-        w.env.C_Spell.GetSpellInfo = function(id) return { name = id == 6673 and "Battle Shout" or "Other" } end
     end)
-    H.equal(addon.Glow.IsPrepared(item), true)
+
     world.time, world.combat = 170, true
     world:fire("PLAYER_REGEN_DISABLED")
-    output(addon, "cdm")
-    H.equal(world.glowActive[item], true)
-
-    item:Hide()
-    world:tick(0.1)
-    H.equal(world.glowActive[item], false)
-    world:tick(0.5)
-    output(addon, "icon-late")
-    H.equal(addon.BattleShoutReminder:Status().cdmStatus, "hidden")
-    H.equal(world.glowActive[item], false)
-
-    item:Show()
-    world:tick(0.5)
-    output(addon, "cdm")
-    item.spellID = 12345
-    world:tick(0.5)
-    output(addon, "icon-late")
-    H.equal(world.glowActive[item], false)
-end
-
--- A CDM frame first discovered during combat cannot allocate overlays.
-do
-    local world, addon = setup()
-    world.combat, world.time = true, 170
-    present(world, 180)
-    local item = world:newCDMItem(42, 6673, true)
-    world:setCDMItems({ item })
-    world:fire("PLAYER_REGEN_DISABLED")
 
     output(addon, "icon-late")
-    H.equal(addon.BattleShoutReminder:Status().cdmStatus, "unprepared")
-    H.equal(world.combatFrameCreations, 0)
-
-    world.combat = false
-    world:fire("PLAYER_REGEN_ENABLED")
-    output(addon, "none")
-    H.equal(addon.Glow.IsPrepared(item), true)
-    world.combat = true
-    world:fire("PLAYER_REGEN_DISABLED")
-    output(addon, "cdm")
+    H.equal(world.glowActive[addon.BattleShoutIcon.frame], true)
+    H.equal(world.glowActive[item], nil, "CDM buff icon receives no glow")
 end
 
 -- Confirmed missing requires combat but never a target; unknown clears it.
@@ -153,13 +116,9 @@ do
     output(addon, "icon-late")
 end
 
--- Combat entry samples fresh auras; data load prepares late CDM items.
+-- Combat entry samples fresh auras and combat exit clears the reminder.
 do
     local world, addon = setup(function(w) present(w, 180) end)
-    local item = world:newCDMItem(42, 6673, true)
-    world:setCDMItems({ item })
-    world:fire("COOLDOWN_VIEWER_DATA_LOADED")
-    H.equal(addon.Glow.IsPrepared(item), true)
 
     world.auras, world.combat = {}, true
     world:fire("PLAYER_REGEN_DISABLED")
@@ -185,6 +144,7 @@ end
 do
     local world, addon = setup()
     local icon = addon.BattleShoutIcon
+    H.equal(icon.frame.strata, "DIALOG", "reminder stays above CDM after placement")
     icon:SetPreview(true)
     H.equal(icon.frame:IsVisible(), true)
     H.equal(icon.frame.mouse, true)
@@ -198,73 +158,41 @@ do
     world.combat = true
     world:fire("PLAYER_REGEN_DISABLED")
     H.equal(icon.frame.mouse, false)
+    H.equal(icon.frame.strata, "DIALOG", "combat reminder retains display layer")
     icon:SetPreview(true)
     H.equal(icon.preview, false)
 end
 
--- CDM consumes the exact localized aura name established by initialization.
+-- The localized aura name drives the independent screen reminder.
 do
     local world, addon = setup(function(w)
         w.spellName = "Schlachtruf"
         w.auras = { { name = "Schlachtruf", expirationTime = 180 } }
-        w:setCDMItems({ w:newCDMItem(42, 6673, true) })
     end)
     H.equal(addon.BattleShoutAura.name, "Schlachtruf")
     world.combat, world.time = true, 170
     world:fire("PLAYER_REGEN_DISABLED")
-    output(addon, "cdm")
+    output(addon, "icon-late")
 end
 
--- Missing CDM fallback discovery is throttled even while the threshold tick runs.
+-- Disabling the reminder clears the icon; custom color persists when it returns.
 do
     local world, addon = setup(function(w) present(w, 180) end)
     world.time, world.combat = 170, true
     world:fire("PLAYER_REGEN_DISABLED")
-    local scans = 0
-    world.env.BuffIconCooldownViewer = {
-        itemFramePool = {
-            EnumerateActive = function()
-                scans = scans + 1
-                return function() return nil end
-            end,
-        },
-    }
-
-    world:tick(0.1)
-    world:tick(0.1)
-    world:tick(0.1)
-    world:tick(0.1)
-    H.equal(scans, 0)
-    world:tick(0.1)
-    H.equal(scans, 1)
-    output(addon, "icon-late")
-end
-
--- Disabled CDM output releases its glow, and configured color reaches both outputs.
-do
-    local item
-    local world, addon = setup(function(w)
-        present(w, 180)
-        item = w:newCDMItem(42, 6673, true)
-        w:setCDMItems({ item })
-    end)
-    world.time, world.combat = 170, true
-    world:fire("PLAYER_REGEN_DISABLED")
     addon.Config.Set("glowColor", "ffff0000")
-    local entry = addon.Glow.Prepare(item)
+
+    local entry = addon.Glow.Prepare(addon.BattleShoutIcon.frame)
     H.equal(world.glows[entry.frame].color[1], 1)
     H.equal(world.glows[entry.frame].color[2], 0)
 
     addon.Config.Set("battleShoutEnabled", false)
     output(addon, "none")
-    H.equal(world.glowActive[item], false)
     addon.Config.Set("battleShoutEnabled", true)
-    output(addon, "cdm")
+    output(addon, "icon-late")
     world.auras = {}
     world:fire("UNIT_AURA", "player")
     output(addon, "icon-missing")
-    H.equal(world.glowActive[item], false)
-    entry = addon.Glow.Prepare(addon.BattleShoutIcon.frame)
     H.equal(world.glows[entry.frame].color[1], 1)
     H.equal(world.glows[entry.frame].color[2], 0)
 end
