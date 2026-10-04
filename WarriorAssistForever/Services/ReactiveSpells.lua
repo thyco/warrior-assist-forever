@@ -96,8 +96,7 @@ local function cooldownFor(id)
     if enabled == false then return "blocked" end
 
     local active = addon.Client.Boolean(member(info, "isActive"))
-    local onGCD = addon.Client.Boolean(member(info, "isOnGCD"))
-    if active == false or onGCD == true then
+    if active == false then
         return "ready"
     end
 

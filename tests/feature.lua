@@ -122,9 +122,10 @@ do
 
     world.auraError = false
     present(world, 350)
-    world:fire("UNIT_AURA", "target")
-    output(addon, "icon-late")
-    world:fire("UNIT_AURA", "player", { updatedAuraInstanceIDs = { 9 } })
+    local opaqueUnit = {}
+    world.secret[opaqueUnit] = true
+    world:fire("UNIT_AURA", opaqueUnit, { updatedAuraInstanceIDs = { 9 } })
+
     output(addon, "none")
     H.equal(addon.BattleShoutAura.Status().deadline, 350)
 end

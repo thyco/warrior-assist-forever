@@ -120,7 +120,7 @@ for _, event in ipairs({
 end
 frame:RegisterUnitEvent("UNIT_AURA", "player")
 
-function addon:OnEvent(event, unit, updateInfo)
+function addon:OnEvent(event, _, updateInfo)
     if event == "PLAYER_LOGIN" then
         self:Start()
         return
@@ -139,9 +139,9 @@ function addon:OnEvent(event, unit, updateInfo)
     if event == "PLAYER_ENTERING_WORLD" then
         reminder:Initialize()
     elseif event == "UNIT_AURA" then
-        if unit == "player" then
-            reminder:OnAuraUpdate(updateInfo)
-        end
+        -- RegisterUnitEvent already limits delivery to the player; the unit
+        -- event payload can be secret when auras are restricted.
+        reminder:OnAuraUpdate(updateInfo)
         return
     end
 

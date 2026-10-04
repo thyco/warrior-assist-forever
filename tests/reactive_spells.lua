@@ -101,7 +101,8 @@ H.equal(status.ready, true, "matching global cooldown is not own cooldown")
 gcdWorld.cooldowns[6572] = { isOnGCD = true, startTime = 100, duration = 1.5 }
 gcdWorld.cooldowns[61304] = nil
 status = gcd.Evaluate("revenge", "usable")
-H.equal(status.ready, true, "explicit GCD flag permits")
+H.equal(status.ready, false, "GCD flag outside cooldown event cannot bypass own cooldown")
+H.equal(status.cooldown, "blocked")
 
 gcdWorld.cooldowns[6572] = { isOnGCD = gcdWorld.secret, startTime = gcdWorld.secret, duration = gcdWorld.secret }
 status = gcd.Evaluate("revenge", "usable")
