@@ -7,7 +7,7 @@ The addon does not cast spells or change bindings.
 
 ## Installation
 
-Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.2.0.zip`.
+Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.2.1.zip`.
 Extract the ZIP into the client's `Interface/AddOns` directory so the manifest is
 `Interface/AddOns/WarriorAssistForever/WarriorAssistForever.toc`. Enable Warrior
 Assist Forever in the AddOns list and log in or reload. LibStub and LibCustomGlow,
@@ -141,7 +141,7 @@ lua tests/reactive_spells.lua
 lua tests/reactive_feature.lua
 python3 tests/package.py
 python3 scripts/package.py
-python3 -m zipfile -l dist/WarriorAssistForever-0.2.0.zip
+python3 -m zipfile -l dist/WarriorAssistForever-0.2.1.zip
 ```
 
 The integration check loads the actual bundled LibStub and LibCustomGlow with WoW
