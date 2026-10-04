@@ -1,13 +1,13 @@
 # Warrior Assist Forever
 
-A standalone Battle Shout reminder for Warriors on WoW Forever (interface 16001).
+A standalone Battle Shout reminder and reactive ability glow addon for Warriors on WoW Forever (interface 16001).
 It observes Battle Shout on your player, including buffs applied by another Warrior
 and other ranks. Reminders appear only in combat; no target or mouseover is needed.
 The addon does not cast spells or change bindings.
 
 ## Installation
 
-Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.1.0.zip`.
+Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.2.0.zip`.
 Extract the ZIP into the client's `Interface/AddOns` directory so the manifest is
 `Interface/AddOns/WarriorAssistForever/WarriorAssistForever.toc`. Enable Warrior
 Assist Forever in the AddOns list and log in or reload. LibStub and LibCustomGlow,
@@ -20,6 +20,22 @@ by default, with a **10-second lead** and a green glow. You can disable it, choo
 a lead from 1 through 60 seconds, change the glow color, and use **Move icon** outside
 combat to position the 64-by-64 screen icon. Settings and position are account wide
 and apply immediately.
+
+Overpower and Revenge each have their own enable toggle, action bar, and button
+selection. Both are enabled by default, but their bars start at **Not selected**:
+choose a supported default bar and button 1–12 for each glow. The choices are
+independent, saved across reloads, and apply immediately. They identify a physical
+button position, including after action bar paging; the addon does not inspect,
+cast, or rewrite the spell or macro on that button. You may place a stance-switch
+macro for Overpower on the selected button while in Berserker Stance. The glow
+prompts you to press it; it does not switch stance or cast for you.
+
+In Battle Stance, a learned Overpower must be reported usable and off its own
+cooldown. In Berserker Stance, its spell activation overlay must be reported and
+its own cooldown ready; ordinary castability is not required there. Revenge uses
+client usability and its own cooldown in Defensive Stance. The glows can appear
+out of combat and without a target or mouseover. An absent, hidden, or unselected
+button stays dark. Battle Shout remains combat only.
 
 When Battle Shout is due, the addon prefers its visible, prepared icon in CDM's
 Tracked Buffs display. Configure Battle Shout there to use this placement. If that
@@ -48,12 +64,24 @@ no usable signal for an external application or refresh, accurate timing cannot
 be guaranteed. Local tests cannot establish combat aura readability, actual glow
 artwork, protected-frame behavior, or CDM visibility in the client.
 
+Reactive glows require readable learned ranks and client readiness evidence.
+Unknown, secret, malformed, or failing stance, overlay, usability, or cooldown
+data leaves the affected glow dark. An ability-specific cooldown blocks its glow;
+the global cooldown alone does not. A newly available button that cannot be
+prepared during combat stays dark until a safe update. The client may make
+usability depend on target state even though this addon has no target check.
+Whether Forever reports an Overpower overlay in Berserker Stance must be confirmed
+in game; the addon does not invent a dodge/block/parry timer when it is absent.
+
 ## Diagnostics
 
 Use `/waf` for addon/client version, Warrior activation, enabled state, lead time,
 aura state (`present`, `missing`, `unknown`), timing quality (`exact`, `estimated`,
 `none`), remaining time when known, CDM state, and selected output (`none`, `cdm`,
-`icon-late`, `icon-missing`). Restricted values are not printed.
+`icon-late`, `icon-missing`). It also reports stance, whether an Overpower or
+Revenge rank is known, ready state, usability or overlay evidence, cooldown,
+selected position, and glow activity. Unknown or restricted values use bounded
+labels; raw spell IDs and restricted API results are not printed.
 
 ## In-game acceptance checks
 
@@ -80,6 +108,17 @@ These checks remain required; no WoW Forever client was available for local test
 6. Reload with a readable buff, an unreadable buff if reproducible, and no buff.
    Compare `/waf` state/quality/output with the rules above. Unknown must not become
    a false missing warning. Check removal and expiration readability in combat.
+7. Choose distinct default bar/button positions for Overpower and Revenge in
+   `/waf config`, reload, and confirm both selections persist. Put Overpower or a
+   stance-switch macro on its chosen button. Trigger Overpower after a dodge or
+   Bloodthrill proc in Battle Stance, then in Berserker Stance. Check the glow,
+   `/waf` overlay evidence, and whether the selected macro works when pressed.
+8. Trigger Revenge after a block, dodge, or parry in Defensive Stance. Repeat both
+   abilities with no current target and just after leaving combat. Check own
+   cooldowns, insufficient rage, stance changes, action bar paging, disabling a
+   feature, and `/waf` diagnostics. Confirm glows clear as opportunities end and
+   no Lua errors occur. Record whether Forever exposes Berserker Overpower overlay
+   and targetless usability; local mocks cannot establish these client behaviors.
 
 If CDM visibility or aura information differs in the real client, report the `/waf`
 status before and after the event, client version, combat state, whether the caster
@@ -97,9 +136,12 @@ lua tests/cdm.lua
 lua tests/feature.lua
 lua tests/settings.lua
 lua tests/integration.lua
+lua tests/reactive_foundation.lua
+lua tests/reactive_spells.lua
+lua tests/reactive_feature.lua
 python3 tests/package.py
 python3 scripts/package.py
-python3 -m zipfile -l dist/WarriorAssistForever-0.1.0.zip
+python3 -m zipfile -l dist/WarriorAssistForever-0.2.0.zip
 ```
 
 The integration check loads the actual bundled LibStub and LibCustomGlow with WoW

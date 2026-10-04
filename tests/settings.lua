@@ -18,7 +18,7 @@ do
     end)
 
     H.equal(addon.SettingsPanel.category.name, "Warrior Assist Forever")
-    H.equal(#addon.SettingsPanel.sections, 1)
+    H.equal(#addon.SettingsPanel.sections, 3)
     H.equal(addon.SettingsPanel.controls.battleShoutEnabled.checked, true)
     H.equal(#addon.SettingsPanel.controls.leadSeconds.options, 60)
     H.equal(addon.SettingsPanel.controls.leadSeconds.options[1].value, 1)
@@ -30,6 +30,42 @@ do
     H.equal(world.openedCategory, addon.SettingsPanel.category.id)
     world.env.SlashCmdList.WARRIORASSISTFOREVER("")
     assert(table.concat(world.printed, "\n"):find("Warrior inactive", 1, true))
+end
+
+-- Each reactive ability owns three native settings and persists its own selection.
+do
+    local world, addon = setup()
+    local keys = { "overpowerEnabled", "overpowerBar", "overpowerButton",
+        "revengeEnabled", "revengeBar", "revengeButton" }
+
+    for _, key in ipairs(keys) do
+        assert(world.settings["WarriorAssistForever_" .. key], key .. " setting missing")
+        assert(addon.SettingsPanel.controls[key], key .. " control missing")
+    end
+
+    H.equal(world.settings.WarriorAssistForever_overpowerEnabled:GetValue(), true)
+    H.equal(world.settings.WarriorAssistForever_revengeEnabled:GetValue(), true)
+    H.equal(world.settings.WarriorAssistForever_overpowerBar:GetValue(), 0)
+    H.equal(world.settings.WarriorAssistForever_revengeBar:GetValue(), 0)
+    H.equal(world.settings.WarriorAssistForever_overpowerButton:GetValue(), 1)
+    H.equal(world.settings.WarriorAssistForever_revengeButton:GetValue(), 1)
+    H.equal(addon.SettingsPanel.controls.overpowerBar.options[1].label, "Not selected")
+    H.equal(#addon.SettingsPanel.controls.overpowerBar.options, 9)
+    H.equal(#addon.SettingsPanel.controls.revengeButton.options, 12)
+
+    world.settings.WarriorAssistForever_overpowerBar:SetValue(3)
+    world.settings.WarriorAssistForever_overpowerButton:SetValue(4)
+    world.settings.WarriorAssistForever_revengeBar:SetValue(5)
+    world.settings.WarriorAssistForever_revengeButton:SetValue(12)
+    world.settings.WarriorAssistForever_overpowerEnabled:SetValue(false)
+
+    H.equal(world.env.WarriorAssistForeverDB.overpowerBar, 3)
+    H.equal(world.env.WarriorAssistForeverDB.overpowerButton, 4)
+    H.equal(world.env.WarriorAssistForeverDB.revengeBar, 5)
+    H.equal(world.env.WarriorAssistForeverDB.revengeButton, 12)
+    H.equal(world.env.WarriorAssistForeverDB.overpowerEnabled, false)
+    H.equal(world.env.WarriorAssistForeverDB.revengeEnabled, true)
+    H.equal(addon.SettingsPanel.controls.revengeBar.text, "Left bar (second right bar)")
 end
 
 -- Move preview starts from settings and stops when the panel closes.
@@ -105,7 +141,7 @@ do
 
     world.env.SlashCmdList.WARRIORASSISTFOREVER("")
     local result = table.concat(world.printed, "\n")
-    assert(result:find("Warrior Assist Forever 0.1.0 / client 16001 / Warrior active", 1, true))
+    assert(result:find("Warrior Assist Forever 0.2.0 / client 16001 / Warrior active", 1, true))
     assert(result:find("Enabled: true / lead: 10s", 1, true))
     assert(result:find("Battle Shout: unknown / none / due in unknown", 1, true))
     assert(result:find("CDM: unavailable / output: none", 1, true))

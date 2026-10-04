@@ -1,8 +1,8 @@
 ## Interface: 16001
 ## Title: Warrior Assist Forever
-## Notes: Battle Shout reminder for Warriors.
+## Notes: Battle Shout reminder and reactive Overpower/Revenge glows for Warriors.
 ## Author: Warrior Assist Forever
-## Version: 0.1.0
+## Version: 0.2.0
 ## IconTexture: Interface\AddOns\WarriorAssistForever\Media\Warrior.tga
 ## OptionalDeps: LibCustomGlow-1.0
 ## SavedVariables: WarriorAssistForeverDB

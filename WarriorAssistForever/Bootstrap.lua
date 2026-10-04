@@ -15,6 +15,61 @@ local auraQualities = { exact = true, estimated = true, none = true }
 local cdmStates = { visible = true, hidden = true, unprepared = true,
     unavailable = true, ["not-configured"] = true }
 local outputs = { none = true, cdm = true, ["icon-late"] = true, ["icon-missing"] = true }
+local stances = { battle = true, defensive = true, berserker = true, unknown = true }
+local signals = { usable = true, overlay = true, inactive = true, unknown = true }
+local cooldowns = { ready = true, blocked = true, unknown = true }
+
+local function member(container, key)
+    if not addon.Client.Readable(container) or type(container) ~= "table" then
+        return nil
+    end
+
+    local ok, value = pcall(function() return container[key] end)
+    if ok and addon.Client.Readable(value) then
+        return value
+    end
+end
+
+local function learnedLabel(kind)
+    local ranks = member(addon.ReactiveSpells.ids, kind)
+    if type(ranks) ~= "table" then
+        return "unknown"
+    end
+
+    local ok, count = pcall(function() return #ranks end)
+    return ok and count > 0 and "learned" or "unknown"
+end
+
+local function selectionLabel(kind)
+    local bar = addon.Client.Number(addon.Config.Get(kind .. "Bar"))
+    local button = addon.Client.Number(addon.Config.Get(kind .. "Button"))
+    if not bar or bar == 0 then
+        return "not selected"
+    end
+
+    if bar < 1 or bar > 8 or bar ~= math.floor(bar)
+        or not button or button < 1 or button > 12 or button ~= math.floor(button) then
+        return "unknown"
+    end
+
+    return "bar " .. bar .. " button " .. button
+end
+
+local function booleanLabel(value, yes, no, fallback)
+    local safe = addon.Client.Boolean(value)
+    if safe == true then return yes end
+    if safe == false then return no end
+    return fallback
+end
+
+local function reactiveDiagnostics(kind, title, status)
+    print(title .. ": " .. learnedLabel(kind)
+        .. " / " .. booleanLabel(member(status, "ready"), "ready", "not ready", "unknown")
+        .. " / " .. label(member(status, "signal"), signals, "unknown")
+        .. " / " .. label(member(status, "cooldown"), cooldowns, "unknown")
+        .. " / " .. selectionLabel(kind)
+        .. " / glow " .. booleanLabel(member(status, "active"), "active", "inactive", "inactive"))
+end
 
 local function diagnostics()
     local aura = addon.BattleShoutAura.Status()
@@ -33,13 +88,18 @@ local function diagnostics()
         and string.format("%.1fs", math.max(0, deadline - now)) or "unknown"
     local warrior = addon.Client.IsWarrior() and "active" or "inactive"
 
-    print("Warrior Assist Forever 0.1.0 / client 16001 / Warrior " .. warrior)
+    print("Warrior Assist Forever 0.2.0 / client 16001 / Warrior " .. warrior)
     print("Enabled: " .. tostring(addon.Config.Get("battleShoutEnabled"))
         .. " / lead: " .. addon.Config.Get("leadSeconds") .. "s")
     print("Battle Shout: " .. label(aura.state, auraStates, "unknown")
         .. " / " .. label(aura.quality, auraQualities, "none") .. " / due in " .. remaining)
     print("CDM: " .. label(discovered, cdmStates, "unavailable")
         .. " / output: " .. label(feature.output, outputs, "none"))
+
+    local reactive = addon.ReactiveAbilities:Status()
+    print("Stance: " .. label(member(reactive, "stance"), stances, "unknown"))
+    reactiveDiagnostics("overpower", "Overpower", member(reactive, "overpower"))
+    reactiveDiagnostics("revenge", "Revenge", member(reactive, "revenge"))
 end
 
 SLASH_WARRIORASSISTFOREVER1 = "/waf"

@@ -36,7 +36,7 @@ function panel:Initialize()
     scroll:SetPoint("TOPLEFT", canvas, "TOPLEFT", 0, -8)
     scroll:SetPoint("BOTTOMRIGHT", canvas, "BOTTOMRIGHT", -28, 8)
     local content = CreateFrame("Frame", nil, scroll)
-    content:SetSize(580, 320)
+    content:SetSize(580, 850)
     scroll:SetScrollChild(content)
     scroll:SetScript("OnSizeChanged", function(_, width)
         content:SetWidth(math.max(1, width))
@@ -68,6 +68,40 @@ function panel:Initialize()
         addon.BattleShoutIcon:SetPreview(true)
     end)
     self.moveIconButton = move
+
+    local bars = { { value = 0, label = "Not selected" } }
+    for index, name in ipairs(addon.Buttons.Bars()) do
+        bars[#bars + 1] = { value = index, label = name }
+    end
+
+    local buttons = {}
+    for index = 1, 12 do
+        buttons[#buttons + 1] = { value = index, label = "Button " .. index }
+    end
+
+    local abilities = {
+        { name = "Overpower", key = "overpower", y = -324,
+            description = "Battle Stance usability or Berserker Stance proc overlay" },
+        { name = "Revenge", key = "revenge", y = -588,
+            description = "Defensive Stance usability" },
+    }
+
+    for _, ability in ipairs(abilities) do
+        local group = widgets.Section(content, ability.name, ability.description, ability.y, 244)
+        self.sections[#self.sections + 1] = group
+
+        local enabledKey = ability.key .. "Enabled"
+        local enabledSetting = registerSetting(enabledKey, "Enable " .. ability.name .. " glow", Settings.VarType.Boolean)
+        self.controls[enabledKey] = widgets.Checkbox(group, "Enable " .. ability.name .. " glow", -70, enabledSetting)
+
+        local barKey = ability.key .. "Bar"
+        local barSetting = registerSetting(barKey, ability.name .. " action bar", Settings.VarType.Number)
+        self.controls[barKey] = widgets.Dropdown(group, "Action bar", -116, barSetting, bars)
+
+        local buttonKey = ability.key .. "Button"
+        local buttonSetting = registerSetting(buttonKey, ability.name .. " button", Settings.VarType.Number)
+        self.controls[buttonKey] = widgets.Dropdown(group, "Button", -166, buttonSetting, buttons)
+    end
 
     canvas:SetScript("OnShow", function()
         content:SetWidth(math.max(1, scroll:GetWidth()))

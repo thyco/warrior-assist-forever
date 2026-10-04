@@ -23,7 +23,7 @@ with tempfile.TemporaryDirectory() as temporary:
     manifest.write_text(original + "\nCore.lua\n")
     result = run()
     assert result.returncode == 0, result.stderr
-    with zipfile.ZipFile(root / "dist/WarriorAssistForever-0.1.0.zip") as archive:
+    with zipfile.ZipFile(root / "dist/WarriorAssistForever-0.2.0.zip") as archive:
         names = archive.namelist()
         assert "WarriorAssistForever/WarriorAssistForever.toc" in names
         assert len(names) == len(set(names))
@@ -32,6 +32,9 @@ with tempfile.TemporaryDirectory() as temporary:
         assert "WarriorAssistForever/Libs/LibCustomGlow-1.0/DKForce-LICENSE" in names
         assert "WarriorAssistForever/Libs/README.md" in names
         assert "WarriorAssistForever/Media/Warrior.tga" in names
+        for entry in ("Features/ReactiveAbilities.lua", "Services/Buttons.lua",
+                      "Services/Stance.lua", "Services/ReactiveSpells.lua"):
+            assert "WarriorAssistForever/" + entry in names
         assert all(name.startswith("WarriorAssistForever/") for name in names)
         for name in names:
             assert archive.read(name) == (root / name).read_bytes(), name

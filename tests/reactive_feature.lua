@@ -55,6 +55,34 @@ local function reactiveEvent(world, event, ...)
     frame.scripts.OnEvent(frame, event, ...)
 end
 
+-- Diagnostics identify Berserker overlay evidence without exposing spell IDs.
+do
+    local world, addon = setup()
+    world.stanceID = 19
+    world.overlay[7384] = true
+    reactiveEvent(world, "UPDATE_SHAPESHIFT_FORM")
+
+    world.env.SlashCmdList.WARRIORASSISTFOREVER("")
+    local result = table.concat(world.printed, "\n")
+    assert(result:find("Stance: berserker", 1, true))
+    assert(result:find("Overpower: learned / ready / overlay / ready / bar 1 button 1 / glow active", 1, true))
+    assert(not result:find("7384", 1, true))
+end
+
+-- Unreadable readiness evidence stays bounded in diagnostics.
+do
+    local world, addon = setup()
+    local restricted = setmetatable({}, { __index = function() error("restricted status") end })
+    world.secret[restricted] = true
+    addon.ReactiveAbilities.Status = function() return restricted end
+
+    world.env.SlashCmdList.WARRIORASSISTFOREVER("")
+    local result = table.concat(world.printed, "\n")
+    assert(result:find("Stance: unknown", 1, true))
+    assert(result:find("Overpower: learned / unknown / unknown / unknown / bar 1 button 1 / glow inactive", 1, true))
+    assert(not result:find("restricted", 1, true))
+end
+
 do
     local world, addon = setup()
     H.equal(world.glowActive[world.overpowerButton], true, "Battle Overpower needs no combat or target")
