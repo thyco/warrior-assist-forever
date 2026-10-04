@@ -11,6 +11,12 @@ function Reminder:OnAuraUpdate(updateInfo)
     self:Refresh(false)
 end
 
+function Reminder:OnPlayerCast(spellID)
+    if self.running and addon.BattleShoutAura.ObservePlayerCast(spellID) then
+        self:Refresh(false)
+    end
+end
+
 function Reminder:Refresh(sampleAura)
     if not self.running then
         return

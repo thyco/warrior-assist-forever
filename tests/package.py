@@ -23,7 +23,7 @@ with tempfile.TemporaryDirectory() as temporary:
     manifest.write_text(original + "\nCore.lua\n")
     result = run()
     assert result.returncode == 0, result.stderr
-    with zipfile.ZipFile(root / "dist/WarriorAssistForever-0.3.1.zip") as archive:
+    with zipfile.ZipFile(root / "dist/WarriorAssistForever-0.3.2.zip") as archive:
         names = archive.namelist()
         assert "WarriorAssistForever/WarriorAssistForever.toc" in names
         assert len(names) == len(set(names))

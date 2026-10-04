@@ -26,6 +26,14 @@ local function matches(aura)
     return name == spellName, true
 end
 
+local function matchesAddedAura(aura)
+    if not readableTable(aura) or Client.Boolean(aura.isHelpful) ~= true then
+        return false
+    end
+
+    return matches(aura)
+end
+
 local function query(method, ...)
     if not C_UnitAuras or type(C_UnitAuras[method]) ~= "function" then
         return nil
@@ -91,7 +99,7 @@ local function observedRefresh(updateInfo, currentID)
 
     if readableTable(updateInfo.addedAuras) then
         for _, aura in pairs(updateInfo.addedAuras) do
-            if matches(aura) then
+            if matchesAddedAura(aura) then
                 return true
             end
         end
@@ -102,6 +110,33 @@ local function observedRefresh(updateInfo, currentID)
             if Client.Number(id) == instanceID then
                 return true
             end
+        end
+    end
+
+    return false
+end
+
+local function addedAura(updateInfo)
+    if not readableTable(updateInfo) or not readableTable(updateInfo.addedAuras) then
+        return nil
+    end
+
+    for _, aura in pairs(updateInfo.addedAuras) do
+        if matchesAddedAura(aura) then
+            return aura
+        end
+    end
+end
+
+local function removedKnownAura(updateInfo)
+    if not instanceID or not readableTable(updateInfo)
+        or not readableTable(updateInfo.removedAuraInstanceIDs) then
+        return false
+    end
+
+    for _, id in pairs(updateInfo.removedAuraInstanceIDs) do
+        if Client.Number(id) == instanceID then
+            return true
         end
     end
 
@@ -130,10 +165,47 @@ function BattleShoutAura.Status()
     return { state = state, deadline = timer.deadline, quality = timer:Quality() or "none" }
 end
 
+function BattleShoutAura.ObservePlayerCast(spellID)
+    local id = Client.Number(spellID)
+    if not spellName or not id then
+        return false
+    end
+
+    local ok, name = pcall(Client.SpellName, id)
+    if not ok or not Client.Readable(name) or name ~= spellName then
+        return false
+    end
+
+    local now = Client.Number(GetTime())
+    if not now then
+        return false
+    end
+
+    local estimatedDeadline = now + 180
+    -- UNIT_AURA may have already supplied the new exact deadline before cast success.
+    if state == "present" and timer:Quality() == "exact"
+        and timer.deadline and timer.deadline >= estimatedDeadline - 5 then
+        return true
+    end
+
+    timer:SetDeadline(estimatedDeadline, "estimated")
+    state = "unknown"
+    instanceID = nil
+    sampled = true
+    return true
+end
+
 function BattleShoutAura.Refresh(updateInfo)
     local ok, aura, complete = pcall(sample)
     if not ok then
         aura, complete = nil, false
+    end
+
+    if not aura and not complete then
+        local addedOK, added = pcall(addedAura, updateInfo)
+        if addedOK then
+            aura = added
+        end
     end
 
     if aura then
@@ -158,7 +230,11 @@ function BattleShoutAura.Refresh(updateInfo)
         timer:Clear()
     else
         state = "unknown"
-        if timer.deadline then
+        local removedOK, removed = pcall(removedKnownAura, updateInfo)
+        if removedOK and removed then
+            timer:Clear()
+            instanceID = nil
+        elseif timer.deadline then
             timer:SetDeadline(timer.deadline, "estimated")
         end
     end

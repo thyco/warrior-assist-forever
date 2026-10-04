@@ -85,7 +85,7 @@ local function diagnostics()
         and string.format("%.1fs", math.max(0, deadline - now)) or "unknown"
     local warrior = addon.Client.IsWarrior() and "active" or "inactive"
 
-    print("Warrior Assist Forever 0.3.1 / client 16001 / Warrior " .. warrior)
+    print("Warrior Assist Forever 0.3.2 / client 16001 / Warrior " .. warrior)
     print("Enabled: " .. tostring(addon.Config.Get("battleShoutEnabled"))
         .. " / lead: " .. addon.Config.Get("leadSeconds") .. "s")
     print("Battle Shout: " .. label(aura.state, auraStates, "unknown")
@@ -115,8 +115,9 @@ for _, event in ipairs({
     frame:RegisterEvent(event)
 end
 frame:RegisterUnitEvent("UNIT_AURA", "player")
+frame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
 
-function addon:OnEvent(event, _, updateInfo)
+function addon:OnEvent(event, _, updateInfo, spellID)
     if event == "PLAYER_LOGIN" then
         self:Start()
         return
@@ -138,6 +139,9 @@ function addon:OnEvent(event, _, updateInfo)
         -- RegisterUnitEvent already limits delivery to the player; the unit
         -- event payload can be secret when auras are restricted.
         reminder:OnAuraUpdate(updateInfo)
+        return
+    elseif event == "UNIT_SPELLCAST_SUCCEEDED" then
+        reminder:OnPlayerCast(spellID)
         return
     end
 

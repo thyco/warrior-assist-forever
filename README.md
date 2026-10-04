@@ -7,7 +7,7 @@ The addon does not cast spells or change bindings.
 
 ## Installation
 
-Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.3.1.zip`.
+Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.3.2.zip`.
 Extract the ZIP into the client's `Interface/AddOns` directory so the manifest is
 `Interface/AddOns/WarriorAssistForever/WarriorAssistForever.toc`. Enable Warrior
 Assist Forever in the AddOns list and log in or reload. LibStub and LibCustomGlow,
@@ -54,6 +54,14 @@ cast by another Warrior. A confirmed removal overrides that estimate immediately
 An existing buff after reload with unreadable expiration has unknown timing until
 a usable observation arrives. An unreadable refresh cannot reliably reset timing.
 
+When combat blocks an aura lookup, a readable Battle Shout application in the
+`UNIT_AURA` event can still refresh the timer. A successful Battle Shout cast by
+your character also starts a 180-second fallback estimate and clears a due icon
+when the new aura is unreadable. A later readable expiration replaces that
+estimate. The cast fallback does not establish confirmed aura presence.
+A readable removal of the known aura instance clears its deadline during a
+restricted lookup; the state remains unknown until absence can be confirmed.
+
 Restricted or failing aura queries produce **unknown**, never an invented missing
 buff. A previously known deadline may continue as an estimated late reminder; an
 unknown result without a deadline displays nothing. Missing requires a complete,
@@ -61,7 +69,9 @@ readable aura enumeration confirming absence.
 
 If the client exposes no usable signal for an external application or refresh,
 accurate timing cannot be guaranteed. Local tests cannot establish combat aura
-readability or actual glow artwork in the client.
+readability or actual glow artwork in the client. If both the aura event and the
+player's cast ID are restricted, the old late reminder may remain until the
+client makes the new buff readable.
 
 Reactive glows require readable learned ranks and client readiness evidence.
 Unknown, secret, malformed, or failing stance, overlay, usability, or cooldown
@@ -104,7 +114,9 @@ These checks remain required; no WoW Forever client was available for local test
 4. With the buff due in combat, hide/untrack its CDM item. Confirm the movable
    icon still glows and the addon puts no glow on any CDM item.
 5. Remove Battle Shout in combat and confirm `missing` with the same screen icon.
-   Reapply it and confirm the warning clears. Disable/re-enable
+   Reapply it yourself while aura queries are restricted and confirm the warning
+   clears on the successful cast, with `/waf` showing an estimated deadline.
+   Disable/re-enable
    the feature while due; leave/re-enter combat and check immediate reevaluation.
 6. Reload with a readable buff, an unreadable buff if reproducible, and no buff.
    Compare `/waf` state/quality/output with the rules above. Unknown must not become
@@ -147,7 +159,7 @@ lua tests/reactive_spells.lua
 lua tests/reactive_feature.lua
 python3 tests/package.py
 python3 scripts/package.py
-python3 -m zipfile -l dist/WarriorAssistForever-0.3.1.zip
+python3 -m zipfile -l dist/WarriorAssistForever-0.3.2.zip
 ```
 
 The integration check loads the actual bundled LibStub and LibCustomGlow with WoW

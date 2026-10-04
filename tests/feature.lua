@@ -11,7 +11,8 @@ local function setup(options)
 end
 
 local function present(world, expiration)
-    world.auras = { { name = "Battle Shout", expirationTime = expiration, auraInstanceID = 9, sourceUnit = "party1" } }
+    world.auras = { { name = "Battle Shout", expirationTime = expiration, auraInstanceID = 9,
+        sourceUnit = "party1", isHelpful = true } }
 end
 
 local function output(addon, expected)
@@ -91,6 +92,88 @@ do
 
     output(addon, "none")
     H.equal(addon.BattleShoutAura.Status().deadline, 350)
+end
+
+-- A readable aura event can confirm a refresh when combat aura queries are restricted.
+do
+    local world, addon = setup(function(w) present(w, 180) end)
+    world.combat, world.time = true, 170
+    world:fire("PLAYER_REGEN_DISABLED")
+    output(addon, "icon-late")
+
+    world.auraError = true
+    local refreshed = { name = "Battle Shout", expirationTime = 350,
+        auraInstanceID = 9, sourceUnit = "party1", isHelpful = true }
+    world:fire("UNIT_AURA", "player", { addedAuras = { refreshed } })
+
+    output(addon, "none")
+    H.equal(addon.BattleShoutAura.Status().state, "present")
+    H.equal(addon.BattleShoutAura.Status().deadline, 350)
+    H.equal(addon.BattleShoutAura.Status().quality, "exact")
+end
+
+-- A successful player cast clears a stale reminder when all aura data is restricted.
+do
+    local world, addon = setup(function(w) present(w, 180) end)
+    world.combat, world.time = true, 170
+    world:fire("PLAYER_REGEN_DISABLED")
+    output(addon, "icon-late")
+
+    world.auraError = true
+    world.secret[world.secret] = true
+    world:fire("UNIT_AURA", "player", world.secret)
+    H.equal(addon.BattleShoutAura.Status().state, "unknown")
+    output(addon, "icon-late")
+
+    world.env.C_Spell.GetSpellInfo = function(id)
+        return { name = (id == 6673 or id == 2048) and "Battle Shout" or "Other spell" }
+    end
+
+    local playerCastRegistered = false
+    for _, frame in ipairs(world.frames) do
+        playerCastRegistered = playerCastRegistered
+            or frame.events.UNIT_SPELLCAST_SUCCEEDED == "player"
+    end
+    H.equal(playerCastRegistered, true, "only player casts are watched for the fallback")
+
+    world:fire("UNIT_SPELLCAST_SUCCEEDED", "player", "other-cast", 7384)
+    output(addon, "icon-late")
+    world:fire("UNIT_SPELLCAST_SUCCEEDED", "player", "restricted-cast", world.secret)
+    output(addon, "icon-late")
+
+    world:fire("UNIT_SPELLCAST_SUCCEEDED", "player", "shout-cast", 2048)
+    output(addon, "none")
+    H.equal(addon.BattleShoutAura.Status().state, "unknown")
+    H.equal(addon.BattleShoutAura.Status().deadline, 350)
+    H.equal(addon.BattleShoutAura.Status().quality, "estimated")
+
+    world:tick(0.1)
+    output(addon, "none")
+    world:fire("UNIT_AURA", "player", world.secret)
+    H.equal(addon.BattleShoutAura.Status().deadline, 350)
+    output(addon, "none")
+
+    world.auraError = false
+    present(world, 355)
+    world:fire("UNIT_AURA", "player", { addedAuras = world.auras })
+    H.equal(addon.BattleShoutAura.Status().deadline, 355)
+    H.equal(addon.BattleShoutAura.Status().quality, "exact")
+    output(addon, "none")
+end
+
+-- A missing-buff icon also clears on a successful cast when aura lookup is restricted.
+do
+    local world, addon = setup()
+    world.combat = true
+    world:fire("PLAYER_REGEN_DISABLED")
+    output(addon, "icon-missing")
+
+    world.auraError = true
+    world:fire("UNIT_SPELLCAST_SUCCEEDED", "player", "shout-cast", 6673)
+
+    output(addon, "none")
+    H.equal(addon.BattleShoutAura.Status().state, "unknown")
+    H.equal(addon.BattleShoutAura.Status().deadline, 180)
 end
 
 -- Disabling clears output, observes new auras, and reenabling is immediate.

@@ -15,7 +15,8 @@ local function setup()
 end
 
 local function buff(world, expiration)
-    world.auras = { { name = "Battle Shout", spellId = 2048, sourceUnit = "party1", auraInstanceID = 7, expirationTime = expiration } }
+    world.auras = { { name = "Battle Shout", spellId = 2048, sourceUnit = "party1",
+        auraInstanceID = 7, expirationTime = expiration, isHelpful = true } }
 end
 
 test("other caster rank uses exact expiration", function()
@@ -153,6 +154,62 @@ test("confirmed removal clears deadline", function()
 
     H.equal(aura.Refresh().state, "missing")
     H.equal(aura.Status().deadline, nil)
+end)
+
+test("known aura removal clears timing when combat lookup is restricted", function()
+    local world, aura = setup()
+    buff(world, 180)
+    aura.Refresh()
+    world.auraError = true
+
+    local status = aura.Refresh({ removedAuraInstanceIDs = { 7 } })
+
+    H.equal(status.state, "unknown")
+    H.equal(status.deadline, nil)
+    H.equal(status.quality, "none")
+end)
+
+test("harmful same-name aura event does not confirm Battle Shout", function()
+    local world, aura = setup()
+    world.auraError = true
+
+    local status = aura.Refresh({ addedAuras = {
+        { name = "Battle Shout", isHelpful = false, expirationTime = 180 },
+    } })
+
+    H.equal(status.state, "unknown")
+    H.equal(status.deadline, nil)
+end)
+
+test("cast fallback invalidates an old aura instance", function()
+    local world, aura = setup()
+    buff(world, 180)
+    aura.Refresh()
+    world.time = 170
+    world.auraError = true
+
+    H.equal(aura.ObservePlayerCast(2048), true)
+    H.equal(aura.Status().state, "unknown")
+    H.equal(aura.Status().deadline, 350)
+
+    local status = aura.Refresh({ removedAuraInstanceIDs = { 7 } })
+
+    H.equal(status.state, "unknown")
+    H.equal(status.deadline, 350)
+end)
+
+test("aura event before cast keeps exact timing", function()
+    local world, aura = setup()
+    world.time = 170
+    buff(world, 350)
+    aura.Refresh({ addedAuras = world.auras })
+    world.time = 171
+    world.auraError = true
+
+    H.equal(aura.ObservePlayerCast(2048), true)
+    H.equal(aura.Status().state, "present")
+    H.equal(aura.Status().deadline, 350)
+    H.equal(aura.Status().quality, "exact")
 end)
 
 test("secret enumeration table is unknown", function()
