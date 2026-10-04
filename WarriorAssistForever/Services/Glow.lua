@@ -28,7 +28,7 @@ local function sameColor(first, second)
     return true
 end
 
-local function update(entry)
+local function update(entry, refreshGeometry)
     local selectedOwner
     local priority
     for owner in pairs(entry.owners) do
@@ -58,7 +58,7 @@ local function update(entry)
             entry.effect:Hide()
         end
 
-        if not entry.active or animationChanged or not sameColor(entry.color, color) then
+        if not entry.active or animationChanged or not sameColor(entry.color, color) or refreshGeometry then
             -- Updating the shown effect changes tint without replaying OnShow.
             library.ProcGlow_Start(entry.frame, { key = glowKey, startAnim = startAnim, color = color })
         end
@@ -99,6 +99,13 @@ end
 
 function Glow.IsPrepared(button)
     return entries[button] ~= nil
+end
+
+function Glow.RefreshGeometry(button)
+    local entry = entries[button]
+    if entry and entry.active then
+        update(entry, true)
+    end
 end
 
 function Glow.Prepare(button)

@@ -47,6 +47,8 @@ function Icon:ApplySettings()
     end
 
     local size = addon.Config.Get("iconSize")
+    local resized = self.size ~= size
+    self.size = size
     self.frame:SetSize(size, size)
     self.frame:ClearAllPoints()
     self.frame:SetPoint("CENTER", UIParent, "CENTER", addon.Config.Get("iconX"), addon.Config.Get("iconY"))
@@ -58,6 +60,10 @@ function Icon:ApplySettings()
 
     addon.Glow.ConfigureOwner(owner, { color = color })
     addon.Glow.Prepare(self.frame)
+    if resized then
+        addon.Glow.RefreshGeometry(self.frame)
+    end
+
     self:Render()
 end
 

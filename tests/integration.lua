@@ -139,6 +139,12 @@ H.equal(overlay[key], effect, "same-color refresh reuses effect")
 H.equal(effect.ProcStartAnim.plays, 1, "same-color refresh does not reflash")
 H.equal(effect.ProcLoopAnim.plays, loopPlaysBeforeActivation + 1, "loop continues")
 
+icon:SetVisible(true)
+addon.Config.Set("iconSize", 36)
+icon:ApplySettings()
+H.equal(effect.point[4], 7.2, "active glow padding follows the new icon size")
+H.equal(effect.ProcStartAnim.plays, 1, "resizing does not reflash")
+
 glow.ConfigureOwner(owner, { color = { 1, 0, 0, 1 } })
 H.equal(effect.ProcStart.color[1], 1, "startup retinted")
 H.equal(effect.ProcLoop.color[2], 0, "loop retinted")
