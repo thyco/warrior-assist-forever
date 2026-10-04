@@ -7,7 +7,7 @@ The addon does not cast spells or change bindings.
 
 ## Installation
 
-Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.3.0.zip`.
+Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.3.1.zip`.
 Extract the ZIP into the client's `Interface/AddOns` directory so the manifest is
 `Interface/AddOns/WarriorAssistForever/WarriorAssistForever.toc`. Enable Warrior
 Assist Forever in the AddOns list and log in or reload. LibStub and LibCustomGlow,
@@ -66,7 +66,9 @@ readability or actual glow artwork in the client.
 Reactive glows require readable learned ranks and client readiness evidence.
 Unknown, secret, malformed, or failing stance, overlay, usability, or cooldown
 data leaves the affected glow dark. An ability-specific cooldown blocks its glow;
-the global cooldown alone does not. A newly available button that cannot be
+the global cooldown alone does not. The addon uses the client's cooldown duration
+with GCD excluded when available, and falls back to the regular cooldown query.
+A newly available button that cannot be
 prepared during combat stays dark until a safe update. The client may make
 usability depend on target state even though this addon has no target check.
 Whether Forever reports an Overpower overlay in Berserker Stance must be confirmed
@@ -114,7 +116,9 @@ These checks remain required; no WoW Forever client was available for local test
    `/waf` overlay evidence, and whether the selected macro works when pressed.
 8. Trigger Revenge after a block, dodge, or parry in Defensive Stance. Repeat both
    abilities with no current target and just after leaving combat. Check own
-   cooldowns, insufficient rage, stance changes, action bar paging, disabling a
+   cooldowns, and trigger another spell's GCD while each opportunity is active;
+   its glow should stay visible until the opportunity ends. Check insufficient
+   rage, stance changes, action bar paging, disabling a
    feature, and `/waf` diagnostics. Confirm glows clear as opportunities end and
    no Lua errors occur. Record whether Forever exposes Berserker Overpower overlay
    and targetless usability; local mocks cannot establish these client behaviors.
@@ -143,7 +147,7 @@ lua tests/reactive_spells.lua
 lua tests/reactive_feature.lua
 python3 tests/package.py
 python3 scripts/package.py
-python3 -m zipfile -l dist/WarriorAssistForever-0.3.0.zip
+python3 -m zipfile -l dist/WarriorAssistForever-0.3.1.zip
 ```
 
 The integration check loads the actual bundled LibStub and LibCustomGlow with WoW

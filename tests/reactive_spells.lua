@@ -109,6 +109,47 @@ status = gcd.Evaluate("revenge", "usable")
 H.equal(status.ready, false, "unreadable cooldown evidence clears GCD readiness")
 H.equal(status.cooldown, "unknown")
 
+local durationWorld, durationSpells = setup()
+durationWorld.usable[7384] = true
+durationWorld.usable[6572] = true
+durationWorld.cooldowns[7384] = { startTime = 100.02, duration = 1.5, isActive = true, isEnabled = true }
+durationWorld.cooldowns[6572] = { startTime = 100.03, duration = 1.5, isActive = true, isEnabled = true }
+durationWorld.cooldowns[61304] = { startTime = 100, duration = 1.5, isActive = true }
+
+local ownCooldown = { [7384] = false, [6572] = false }
+local restrictedDuration = false
+durationWorld.env.C_Spell.GetSpellCooldownDuration = function(id, ignoreGCD)
+    H.equal(ignoreGCD, true, "own cooldown query excludes the GCD")
+
+    return {
+        HasSecretValues = function() return restrictedDuration end,
+        IsZero = function() return not ownCooldown[id] end,
+        HasExpired = function() return false end,
+    }
+end
+
+status = durationSpells.Evaluate("overpower", "usable")
+H.equal(status.ready, true, "Overpower stays ready during a GCD with differing timestamps")
+
+status = durationSpells.Evaluate("revenge", "usable")
+H.equal(status.ready, true, "Revenge stays ready during a GCD with differing timestamps")
+
+ownCooldown[7384] = true
+status = durationSpells.Evaluate("overpower", "usable")
+H.equal(status.ready, false, "Overpower's own cooldown still blocks")
+H.equal(status.cooldown, "blocked")
+
+ownCooldown[6572] = true
+status = durationSpells.Evaluate("revenge", "usable")
+H.equal(status.ready, false, "Revenge's own cooldown still blocks")
+H.equal(status.cooldown, "blocked")
+
+restrictedDuration = true
+ownCooldown[6572] = false
+status = durationSpells.Evaluate("revenge", "usable")
+H.equal(status.ready, false, "restricted cooldown duration cannot light Revenge")
+H.equal(status.cooldown, "unknown")
+
 gcdWorld.env.C_Spell.IsSpellUsable = function() error("restricted") end
 status = gcd.Evaluate("revenge", "usable")
 H.equal(status.ready, false, "throwing usability clears signal")

@@ -55,6 +55,32 @@ local function reactiveEvent(world, event, ...)
     frame.scripts.OnEvent(frame, event, ...)
 end
 
+-- A global cooldown must not hide the currently available ability's glow.
+do
+    local world = setup(function(state)
+        state.cooldowns[7384] = { startTime = 100.02, duration = 1.5, isActive = true, isEnabled = true }
+        state.cooldowns[6572] = { startTime = 100.03, duration = 1.5, isActive = true, isEnabled = true }
+        state.cooldowns[61304] = { startTime = 100, duration = 1.5, isActive = true }
+        state.env.C_Spell.GetSpellCooldownDuration = function()
+            return {
+                HasSecretValues = function() return false end,
+                IsZero = function() return true end,
+            }
+        end
+    end)
+
+    H.equal(world.glowActive[world.overpowerButton], true, "Battle Overpower glows during GCD")
+
+    world.stanceID = 19
+    world.overlay[7384] = true
+    reactiveEvent(world, "UPDATE_SHAPESHIFT_FORM")
+    H.equal(world.glowActive[world.overpowerButton], true, "Berserker Overpower glows during GCD")
+
+    world.stanceID = 18
+    reactiveEvent(world, "UPDATE_SHAPESHIFT_FORM")
+    H.equal(world.glowActive[world.revengeButton], true, "Defensive Revenge glows during GCD")
+end
+
 -- Diagnostics identify Berserker overlay evidence without exposing spell IDs.
 do
     local world, addon = setup()

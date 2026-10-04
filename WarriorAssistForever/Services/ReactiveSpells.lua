@@ -38,6 +38,15 @@ local function nonnegative(value)
     if number and number >= 0 then return number end
 end
 
+local function durationBoolean(duration, name)
+    local ok, method = pcall(function() return duration[name] end)
+    if not ok or not addon.Client.Readable(method) or type(method) ~= "function" then
+        return nil
+    end
+
+    return addon.Client.Boolean(read(method, duration))
+end
+
 function ReactiveSpells.Rebuild()
     local names = {}
     local seen = { overpower = {}, revenge = {} }
@@ -94,6 +103,23 @@ local function cooldownFor(id)
 
     local enabled = addon.Client.Boolean(member(info, "isEnabled"))
     if enabled == false then return "blocked" end
+
+    local ownDuration = read(spellAPI("GetSpellCooldownDuration"), id, true)
+    if ownDuration then
+        if durationBoolean(ownDuration, "HasSecretValues") ~= false then
+            return "unknown"
+        end
+
+        local zero = durationBoolean(ownDuration, "IsZero")
+        if zero == true then return "ready" end
+        if zero ~= false then return "unknown" end
+
+        local expired = durationBoolean(ownDuration, "HasExpired")
+        if expired == true then return "ready" end
+        if expired == false then return "blocked" end
+
+        return "unknown"
+    end
 
     local active = addon.Client.Boolean(member(info, "isActive"))
     if active == false then
