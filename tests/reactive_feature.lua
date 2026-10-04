@@ -81,6 +81,35 @@ do
     H.equal(world.glowActive[world.revengeButton], true, "Defensive Revenge glows during GCD")
 end
 
+-- The cooldown event supplies GCD evidence when timestamp and duration data are restricted.
+do
+    local world = setup(function(state)
+        local hiddenTime = {}
+        state.secret[hiddenTime] = true
+        state.cooldowns[7384] = { startTime = hiddenTime, duration = hiddenTime,
+            isActive = true, isEnabled = true, isOnGCD = true }
+        state.cooldowns[6572] = { startTime = hiddenTime, duration = hiddenTime,
+            isActive = true, isEnabled = true, isOnGCD = true }
+        state.cooldowns[61304] = { startTime = hiddenTime, duration = hiddenTime, isActive = true }
+        state.env.C_Spell.GetSpellCooldownDuration = function()
+            return { HasSecretValues = function() return true end }
+        end
+    end)
+
+    H.equal(world.glowActive[world.overpowerButton], false, "GCD flag is not used before cooldown event")
+
+    reactiveEvent(world, "SPELL_UPDATE_COOLDOWN")
+    H.equal(world.glowActive[world.overpowerButton], true, "Battle Overpower uses event GCD evidence")
+
+    world.stanceID = 18
+    reactiveEvent(world, "UPDATE_SHAPESHIFT_FORM")
+    H.equal(world.glowActive[world.revengeButton], true, "Defensive Revenge uses event GCD evidence")
+
+    world.cooldowns[61304].isActive = false
+    world:tick(0.2)
+    H.equal(world.glowActive[world.revengeButton], false, "event evidence expires after the GCD")
+end
+
 -- Diagnostics identify Berserker overlay evidence without exposing spell IDs.
 do
     local world, addon = setup()

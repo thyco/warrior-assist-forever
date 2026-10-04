@@ -150,6 +150,47 @@ status = durationSpells.Evaluate("revenge", "usable")
 H.equal(status.ready, false, "restricted cooldown duration cannot light Revenge")
 H.equal(status.cooldown, "unknown")
 
+durationWorld.cooldowns[7384] = { startTime = 0, duration = 0, isActive = false, isEnabled = true }
+status = durationSpells.Evaluate("overpower", "usable")
+H.equal(status.ready, true, "inactive native cooldown remains ready when duration object is restricted")
+H.equal(status.cooldown, "ready")
+
+local eventWorld, eventSpells = setup({ 6572 })
+local hiddenTime = {}
+eventWorld.secret[hiddenTime] = true
+eventWorld.usable[6572] = true
+eventWorld.cooldowns[6572] = { startTime = hiddenTime, duration = hiddenTime,
+    isActive = true, isEnabled = true, isOnGCD = true }
+eventWorld.cooldowns[61304] = { startTime = hiddenTime, duration = hiddenTime,
+    isActive = true }
+eventWorld.env.C_Spell.GetSpellCooldownDuration = function()
+    return { HasSecretValues = function() return true end }
+end
+
+status = eventSpells.Evaluate("revenge", "usable")
+H.equal(status.ready, false, "GCD flag is not trusted outside its cooldown event")
+
+eventSpells.ObserveCooldownEvent()
+status = eventSpells.Evaluate("revenge", "usable")
+H.equal(status.ready, true, "event-confirmed GCD keeps Revenge ready with restricted timing")
+
+eventWorld.env.C_Spell.GetSpellCooldownDuration = function()
+    return {
+        HasSecretValues = function() return false end,
+        IsZero = function() return false end,
+        HasExpired = function() return false end,
+    }
+end
+status = eventSpells.Evaluate("revenge", "usable")
+H.equal(status.ready, false, "readable own cooldown overrides cached GCD evidence")
+
+eventWorld.env.C_Spell.GetSpellCooldownDuration = function()
+    return { HasSecretValues = function() return true end }
+end
+eventWorld.cooldowns[61304].isActive = false
+status = eventSpells.Evaluate("revenge", "usable")
+H.equal(status.ready, false, "cached GCD evidence expires when the global cooldown ends")
+
 gcdWorld.env.C_Spell.IsSpellUsable = function() error("restricted") end
 status = gcd.Evaluate("revenge", "usable")
 H.equal(status.ready, false, "throwing usability clears signal")

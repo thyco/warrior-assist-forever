@@ -179,7 +179,7 @@ do
 
     world.env.SlashCmdList.WARRIORASSISTFOREVER("")
     local result = table.concat(world.printed, "\n")
-    assert(result:find("Warrior Assist Forever 0.3.2 / client 16001 / Warrior active", 1, true))
+    assert(result:find("Warrior Assist Forever 0.3.3 / client 16001 / Warrior active", 1, true))
     assert(result:find("Enabled: true / lead: 10s", 1, true))
     assert(result:find("Battle Shout: unknown / none / due in unknown", 1, true))
     assert(result:find("Reminder: none", 1, true))

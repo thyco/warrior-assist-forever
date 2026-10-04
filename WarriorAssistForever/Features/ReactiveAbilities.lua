@@ -87,6 +87,10 @@ function ReactiveAbilities:Initialize()
                 addon.ReactiveSpells.Rebuild()
             end
 
+            if event == "SPELL_UPDATE_COOLDOWN" then
+                addon.ReactiveSpells.ObserveCooldownEvent()
+            end
+
             self:Refresh()
         end)
     end

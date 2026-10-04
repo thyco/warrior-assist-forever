@@ -1,5 +1,5 @@
 local _, addon = ...
-local ReactiveSpells = { ids = { overpower = {}, revenge = {} } }
+local ReactiveSpells = { ids = { overpower = {}, revenge = {} }, gcdOnly = {} }
 addon.ReactiveSpells = ReactiveSpells
 
 local seeds = { overpower = 7384, revenge = 6572 }
@@ -51,6 +51,7 @@ function ReactiveSpells.Rebuild()
     local names = {}
     local seen = { overpower = {}, revenge = {} }
     ReactiveSpells.ids = { overpower = {}, revenge = {} }
+    ReactiveSpells.gcdOnly = {}
 
     for kind, seed in pairs(seeds) do
         names[kind] = spellName(seed)
@@ -76,6 +77,19 @@ function ReactiveSpells.Rebuild()
     end
 end
 
+function ReactiveSpells.ObserveCooldownEvent()
+    ReactiveSpells.gcdOnly = {}
+
+    for _, ranks in pairs(ReactiveSpells.ids) do
+        for _, id in ipairs(ranks) do
+            local info = read(spellAPI("GetSpellCooldown"), id)
+            if addon.Client.Boolean(member(info, "isOnGCD")) == true then
+                ReactiveSpells.gcdOnly[id] = true
+            end
+        end
+    end
+end
+
 local function signalFor(id, kind, mode)
     if mode == "usable" then
         local usable = addon.Client.Boolean(read(spellAPI("IsSpellUsable"), id))
@@ -94,6 +108,15 @@ local function signalFor(id, kind, mode)
     return "unknown"
 end
 
+local function eventGCDReady(id)
+    if not ReactiveSpells.gcdOnly[id] then
+        return false
+    end
+
+    local gcd = read(spellAPI("GetSpellCooldown"), 61304)
+    return addon.Client.Boolean(member(gcd, "isActive")) == true
+end
+
 local function cooldownFor(id)
     local info = read(spellAPI("GetSpellCooldown"), id)
 
@@ -104,27 +127,35 @@ local function cooldownFor(id)
     local enabled = addon.Client.Boolean(member(info, "isEnabled"))
     if enabled == false then return "blocked" end
 
+    local active = addon.Client.Boolean(member(info, "isActive"))
+    if active == false then return "ready" end
+
     local ownDuration = read(spellAPI("GetSpellCooldownDuration"), id, true)
     if ownDuration then
         if durationBoolean(ownDuration, "HasSecretValues") ~= false then
+            if eventGCDReady(id) then return "ready" end
+
             return "unknown"
         end
 
         local zero = durationBoolean(ownDuration, "IsZero")
         if zero == true then return "ready" end
-        if zero ~= false then return "unknown" end
+        if zero ~= false then
+            if eventGCDReady(id) then return "ready" end
+
+            return "unknown"
+        end
 
         local expired = durationBoolean(ownDuration, "HasExpired")
         if expired == true then return "ready" end
         if expired == false then return "blocked" end
 
+        if eventGCDReady(id) then return "ready" end
+
         return "unknown"
     end
 
-    local active = addon.Client.Boolean(member(info, "isActive"))
-    if active == false then
-        return "ready"
-    end
+    if eventGCDReady(id) then return "ready" end
 
     local start = nonnegative(member(info, "startTime"))
     local duration = nonnegative(member(info, "duration"))
