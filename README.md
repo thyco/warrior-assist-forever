@@ -7,7 +7,7 @@ The addon does not cast spells or change bindings.
 
 ## Installation
 
-Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.4.0.zip`.
+Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.4.1.zip`.
 Extract the ZIP into the client's `Interface/AddOns` directory so the manifest is
 `Interface/AddOns/WarriorAssistForever/WarriorAssistForever.toc`. Enable Warrior
 Assist Forever in the AddOns list and log in or reload. LibStub and LibCustomGlow,
@@ -28,7 +28,8 @@ the game. If the current stance is unreadable, it shows a question mark. Its
 enable toggle, 16–128 pixel size selector, and **Move stance icon** control are
 separate from the Battle Shout reminder. Move it outside combat; its size and
 position are saved across reloads. It accepts mouse input only while you are
-moving it from settings.
+moving it from settings. During normal play, the world map covers the stance
+icon where they overlap.
 
 Overpower and Revenge each have their own enable toggle, action bar, and button
 selection. Both are enabled by default, but their bars start at **Not selected**:
@@ -162,7 +163,8 @@ These checks remain required; no WoW Forever client was available for local test
     position. Switch through Battle, Defensive, and Berserker Stance in and out of
     combat; the artwork should update and the icon should stay visible. Disable
     and re-enable it from settings and check that the Battle Shout icon keeps its
-    own size and position.
+    own size and position. Open the world map over the stance icon; the map
+    should cover it until you close the map.
 
 If aura information differs in the real client, report the `/waf` status before and
 after the event, client version, combat state, whether the caster was another
@@ -185,7 +187,7 @@ lua tests/reactive_spells.lua
 lua tests/reactive_feature.lua
 python3 tests/package.py
 python3 scripts/package.py
-python3 -m zipfile -l dist/WarriorAssistForever-0.4.0.zip
+python3 -m zipfile -l dist/WarriorAssistForever-0.4.1.zip
 ```
 
 The integration check loads the actual bundled LibStub and LibCustomGlow with WoW

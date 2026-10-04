@@ -19,7 +19,7 @@ function Icon:Initialize()
     local frame = CreateFrame("Frame", "WarriorAssistForeverStanceIcon", UIParent)
     self.frame = frame
     frame:SetSize(64, 64)
-    frame:SetFrameStrata("DIALOG")
+    frame:SetFrameStrata("LOW")
     frame:SetMovable(true)
     frame:SetClampedToScreen(true)
     frame:RegisterForDrag("LeftButton")
@@ -111,6 +111,6 @@ function Icon:SetPreview(enabled)
         position(self.frame)
     end
 
-    self.frame:SetFrameStrata(self.preview and "TOOLTIP" or "DIALOG")
+    self.frame:SetFrameStrata(self.preview and "TOOLTIP" or "LOW")
     self.frame:EnableMouse(self.preview)
 end

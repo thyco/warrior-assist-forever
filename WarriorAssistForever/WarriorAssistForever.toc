@@ -2,7 +2,7 @@
 ## Title: Warrior Assist Forever
 ## Notes: Battle Shout reminder, reactive glows, and current stance icon for Warriors.
 ## Author: Warrior Assist Forever
-## Version: 0.4.0
+## Version: 0.4.1
 ## IconTexture: Interface\AddOns\WarriorAssistForever\Media\Warrior.tga
 ## OptionalDeps: LibCustomGlow-1.0
 ## SavedVariables: WarriorAssistForeverDB
