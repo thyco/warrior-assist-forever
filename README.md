@@ -75,14 +75,15 @@ client makes the new buff readable.
 
 Reactive glows require readable learned ranks and client readiness evidence.
 Unknown, secret, malformed, or failing stance, overlay, usability, or cooldown
-data leaves the affected glow dark. Following Hunter's Mongoose Bite logic, a
-readable `isOnGCD` flag captured on `SPELL_UPDATE_COOLDOWN` keeps the glow ready
-without requiring a separate global cooldown query. A later cooldown event clears
-that evidence when the flag is false or unreadable. Otherwise, the addon uses the
-client's cooldown duration with GCD excluded when available, then falls back to
-regular cooldown timing. A native inactive cooldown stays ready even if the
-separate duration object is restricted. An unreadable own cooldown without the
-event flag stays dark.
+data leaves the affected glow dark. Following Hunter's Mongoose Bite logic, the
+addon captures `isOnGCD` on `SPELL_UPDATE_COOLDOWN` without requiring a separate
+global cooldown query. A readable own cooldown still blocks the glow. When own
+cooldown timing is restricted, the event flag keeps the glow ready for up to
+1.6 seconds; a later cooldown event refreshes or clears it. Otherwise, the addon
+uses the client's cooldown duration with GCD excluded when available, then falls
+back to regular cooldown timing. A native inactive cooldown stays ready even if
+the separate duration object is restricted. An unreadable own cooldown without
+event evidence stays dark.
 
 A newly available button that cannot be
 prepared during combat stays dark until a safe update. The client may make

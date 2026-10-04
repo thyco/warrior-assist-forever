@@ -113,6 +113,13 @@ do
     world.cooldowns[6572].isOnGCD = false
     reactiveEvent(world, "SPELL_UPDATE_COOLDOWN")
     H.equal(world.glowActive[world.revengeButton], false, "later cooldown event clears GCD evidence")
+
+    world.cooldowns[6572].isOnGCD = true
+    reactiveEvent(world, "SPELL_UPDATE_COOLDOWN")
+    H.equal(world.glowActive[world.revengeButton], true, "a fresh event restores Revenge GCD evidence")
+
+    world:tick(1.7)
+    H.equal(world.glowActive[world.revengeButton], false, "Revenge glow expires without another event")
 end
 
 -- Diagnostics identify Berserker overlay evidence without exposing spell IDs.

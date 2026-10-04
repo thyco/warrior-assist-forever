@@ -175,6 +175,13 @@ H.equal(status.ready, true, "Overpower trusts its event GCD flag without a separ
 status = hunterStyle.Evaluate("revenge", "usable")
 H.equal(status.ready, true, "Revenge trusts its event GCD flag without a separate GCD status")
 
+hunterWorld.time = 102
+status = hunterStyle.Evaluate("overpower", "usable")
+H.equal(status.ready, false, "cached Overpower GCD evidence expires without another event")
+
+status = hunterStyle.Evaluate("revenge", "usable")
+H.equal(status.ready, false, "cached Revenge GCD evidence expires without another event")
+
 local eventWorld, eventSpells = setup({ 6572 })
 local hiddenTime = {}
 eventWorld.secret[hiddenTime] = true
@@ -202,11 +209,14 @@ eventWorld.env.C_Spell.GetSpellCooldownDuration = function()
     }
 end
 status = eventSpells.Evaluate("revenge", "usable")
-H.equal(status.ready, true, "event GCD flag takes precedence over the duration query")
+H.equal(status.ready, false, "readable own cooldown blocks despite event GCD evidence")
 
 eventWorld.env.C_Spell.GetSpellCooldownDuration = function()
     return { HasSecretValues = function() return true end }
 end
+status = eventSpells.Evaluate("revenge", "usable")
+H.equal(status.ready, false, "confirmed own cooldown clears earlier GCD evidence")
+
 eventWorld.cooldowns[61304].isActive = false
 eventWorld.cooldowns[6572].isOnGCD = false
 eventSpells.ObserveCooldownEvent()
