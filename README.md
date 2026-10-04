@@ -1,13 +1,13 @@
 # Warrior Assist Forever
 
-A standalone Battle Shout reminder and reactive ability glow addon for Warriors on WoW Forever (interface 16001).
+A standalone Battle Shout reminder, reactive ability glow, and stance icon addon for Warriors on WoW Forever (interface 16001).
 It observes Battle Shout on your player, including buffs applied by another Warrior
 and other ranks. Reminders appear only in combat; no target or mouseover is needed.
 The addon does not cast spells or change bindings.
 
 ## Installation
 
-Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.3.5.zip`.
+Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.4.0.zip`.
 Extract the ZIP into the client's `Interface/AddOns` directory so the manifest is
 `Interface/AddOns/WarriorAssistForever/WarriorAssistForever.toc`. Enable Warrior
 Assist Forever in the AddOns list and log in or reload. LibStub and LibCustomGlow,
@@ -21,6 +21,14 @@ You can disable it, choose a lead from 1 through 60 seconds, select Blizzard's
 native glow or a custom color, and set the icon size from 16 to 128 pixels in
 4-pixel steps. Use **Move icon** outside combat to position it over your CDM buff
 icon if desired. Settings and position are account wide and apply immediately.
+
+The **Current Stance** icon is visible by default in and out of combat, with or
+without a target. It shows the Battle, Defensive, or Berserker Stance artwork from
+the game. If the current stance is unreadable, it shows a question mark. Its
+enable toggle, 16–128 pixel size selector, and **Move stance icon** control are
+separate from the Battle Shout reminder. Move it outside combat; its size and
+position are saved across reloads. It accepts mouse input only while you are
+moving it from settings.
 
 Overpower and Revenge each have their own enable toggle, action bar, and button
 selection. Both are enabled by default, but their bars start at **Not selected**:
@@ -149,6 +157,12 @@ These checks remain required; no WoW Forever client was available for local test
    switch between them while each glow is active. Check that each stance restores
    its own color, Blizzard native mode works for both, and Revenge keeps its own
    choice.
+10. With no target and outside combat, confirm the stance icon shows the current
+    stance. Change its size and move it in settings, then reload and confirm its
+    position. Switch through Battle, Defensive, and Berserker Stance in and out of
+    combat; the artwork should update and the icon should stay visible. Disable
+    and re-enable it from settings and check that the Battle Shout icon keeps its
+    own size and position.
 
 If aura information differs in the real client, report the `/waf` status before and
 after the event, client version, combat state, whether the caster was another
@@ -164,13 +178,14 @@ lua tests/foundation.lua
 lua tests/aura.lua
 lua tests/feature.lua
 lua tests/settings.lua
+lua tests/stance_icon.lua
 lua tests/integration.lua
 lua tests/reactive_foundation.lua
 lua tests/reactive_spells.lua
 lua tests/reactive_feature.lua
 python3 tests/package.py
 python3 scripts/package.py
-python3 -m zipfile -l dist/WarriorAssistForever-0.3.5.zip
+python3 -m zipfile -l dist/WarriorAssistForever-0.4.0.zip
 ```
 
 The integration check loads the actual bundled LibStub and LibCustomGlow with WoW

@@ -36,7 +36,7 @@ function panel:Initialize()
     scroll:SetPoint("TOPLEFT", canvas, "TOPLEFT", 0, -8)
     scroll:SetPoint("BOTTOMRIGHT", canvas, "BOTTOMRIGHT", -28, 8)
     local content = CreateFrame("Frame", nil, scroll)
-    content:SetSize(580, 1140)
+    content:SetSize(580, 1410)
     scroll:SetScrollChild(content)
     scroll:SetScript("OnSizeChanged", function(_, width)
         content:SetWidth(math.max(1, width))
@@ -146,12 +146,34 @@ function panel:Initialize()
         end
     end
 
+    local stance = widgets.Section(content, "Current Stance",
+        "Always-visible icon for Battle, Defensive, or Berserker Stance", -1126, 235)
+    self.sections[#self.sections + 1] = stance
+
+    local stanceEnabled = registerSetting("stanceIconEnabled", "Show current stance icon", Settings.VarType.Boolean)
+    self.controls.stanceIconEnabled = widgets.Checkbox(stance,
+        "Show current stance icon", -70, stanceEnabled)
+
+    local stanceSize = registerSetting("stanceIconSize", "Stance icon size", Settings.VarType.Number)
+    self.controls.stanceIconSize = widgets.Dropdown(stance,
+        "Stance icon size", -116, stanceSize, sizes)
+
+    local stanceMove = CreateFrame("Button", nil, stance, "UIPanelButtonTemplate")
+    stanceMove:SetPoint("TOPLEFT", stance, "TOPLEFT", 20, -170)
+    stanceMove:SetSize(160, 28)
+    stanceMove:SetText("Move stance icon")
+    stanceMove:SetScript("OnClick", function()
+        addon.StanceIcon:SetPreview(true)
+    end)
+    self.moveStanceIconButton = stanceMove
+
     canvas:SetScript("OnShow", function()
         content:SetWidth(math.max(1, scroll:GetWidth()))
         self:Refresh()
     end)
     canvas:SetScript("OnHide", function()
         addon.BattleShoutIcon:SetPreview(false)
+        addon.StanceIcon:SetPreview(false)
     end)
     addon.Config.Subscribe(function()
         self:Refresh()

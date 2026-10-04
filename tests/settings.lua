@@ -18,7 +18,7 @@ do
     end)
 
     H.equal(addon.SettingsPanel.category.name, "Warrior Assist Forever")
-    H.equal(#addon.SettingsPanel.sections, 3)
+    H.equal(#addon.SettingsPanel.sections, 4)
     H.equal(addon.SettingsPanel.controls.battleShoutEnabled.checked, true)
     H.equal(#addon.SettingsPanel.controls.leadSeconds.options, 60)
     H.equal(addon.SettingsPanel.controls.leadSeconds.options[1].value, 1)
@@ -28,6 +28,11 @@ do
     H.equal(addon.SettingsPanel.controls.iconSize.selectedValue, 64)
     H.equal(addon.SettingsPanel.controls.iconSize.options[1].value, 16)
     H.equal(addon.SettingsPanel.controls.iconSize.options[29].value, 128)
+    H.equal(addon.SettingsPanel.controls.stanceIconEnabled.checked, true)
+    H.equal(addon.SettingsPanel.controls.stanceIconSize.selectedValue, 64)
+    H.equal(addon.SettingsPanel.controls.stanceIconSize.options[1].value, 16)
+    H.equal(addon.SettingsPanel.controls.stanceIconSize.options[29].value, 128)
+    H.equal(addon.StanceIcon.frame, nil, "non-Warrior has no stance icon")
 
     H.equal(world.env.SLASH_WARRIORASSISTFOREVER1, "/waf")
     world.env.SlashCmdList.WARRIORASSISTFOREVER("config")
@@ -179,7 +184,7 @@ do
 
     world.env.SlashCmdList.WARRIORASSISTFOREVER("")
     local result = table.concat(world.printed, "\n")
-    assert(result:find("Warrior Assist Forever 0.3.5 / client 16001 / Warrior active", 1, true))
+    assert(result:find("Warrior Assist Forever 0.4.0 / client 16001 / Warrior active", 1, true))
     assert(result:find("Enabled: true / lead: 10s", 1, true))
     assert(result:find("Battle Shout: unknown / none / due in unknown", 1, true))
     assert(result:find("Reminder: none", 1, true))

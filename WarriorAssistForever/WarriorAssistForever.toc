@@ -1,8 +1,8 @@
 ## Interface: 16001
 ## Title: Warrior Assist Forever
-## Notes: Battle Shout reminder and reactive Overpower/Revenge glows for Warriors.
+## Notes: Battle Shout reminder, reactive glows, and current stance icon for Warriors.
 ## Author: Warrior Assist Forever
-## Version: 0.3.5
+## Version: 0.4.0
 ## IconTexture: Interface\AddOns\WarriorAssistForever\Media\Warrior.tga
 ## OptionalDeps: LibCustomGlow-1.0
 ## SavedVariables: WarriorAssistForeverDB
@@ -15,6 +15,7 @@ Services/Config.lua
 Services/Client.lua
 Services/Buttons.lua
 Services/Stance.lua
+Services/StanceIcon.lua
 Services/ReactiveSpells.lua
 Services/Timers.lua
 Services/BattleShoutAura.lua

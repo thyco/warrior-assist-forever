@@ -10,6 +10,10 @@ local defaults = {
     iconSize = 64,
     iconX = 0,
     iconY = -270,
+    stanceIconEnabled = true,
+    stanceIconSize = 64,
+    stanceIconX = 0,
+    stanceIconY = -180,
     overpowerEnabled = true,
     overpowerBar = 0,
     overpowerButton = 1,
@@ -53,7 +57,7 @@ local function validValue(key, value)
         return value >= 1 and value <= 60 and value == math.floor(value)
     end
 
-    if key == "iconSize" then
+    if key == "iconSize" or key == "stanceIconSize" then
         return value >= 16 and value <= 128 and value % 4 == 0
     end
 
@@ -61,7 +65,7 @@ local function validValue(key, value)
         return #value == 8 and value:match("^%x+$") ~= nil
     end
 
-    if key == "iconX" or key == "iconY" then
+    if key == "iconX" or key == "iconY" or key == "stanceIconX" or key == "stanceIconY" then
         return value == value and value >= -4096 and value <= 4096
     end
 
