@@ -7,7 +7,7 @@ The addon does not cast spells or change bindings.
 
 ## Installation
 
-Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.4.1.zip`.
+Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.4.2.zip`.
 Extract the ZIP into the client's `Interface/AddOns` directory so the manifest is
 `Interface/AddOns/WarriorAssistForever/WarriorAssistForever.toc`. Enable Warrior
 Assist Forever in the AddOns list and log in or reload. LibStub and LibCustomGlow,
@@ -21,6 +21,9 @@ You can disable it, choose a lead from 1 through 60 seconds, select Blizzard's
 native glow or a custom color, and set the icon size from 16 to 128 pixels in
 4-pixel steps. Use **Move icon** outside combat to position it over your CDM buff
 icon if desired. Settings and position are account wide and apply immediately.
+Enable **Hide icon artwork (keep glow)** to make the Battle Shout artwork fully
+transparent while its green or custom glow stays visible. The move preview still
+shows the glow, so you can position the transparent icon.
 
 The **Current Stance** icon is visible by default in and out of combat, with or
 without a target. It shows the Battle, Defensive, or Berserker Stance artwork from
@@ -124,7 +127,10 @@ These checks remain required; no WoW Forever client was available for local test
    without a target and wait until the configured lead boundary. Confirm one
    activation flash followed by a looping glow around the movable icon, even if
    CDM displays Battle Shout. Change its color and native setting while due and
-   confirm the glow updates without repeatedly flashing.
+   confirm the glow updates without repeatedly flashing. Toggle **Hide icon
+   artwork (keep glow)** while the reminder is due; only the icon artwork should
+   disappear, and the glow should remain at full strength. Move the transparent
+   icon using its visible preview glow.
 3. Have **another Warrior apply and refresh Battle Shout**, both outside and inside
    combat, including a different rank where available. Confirm `/waf` timing updates
    when the aura is readable and refreshing clears the reminder. Confirm the
@@ -187,7 +193,7 @@ lua tests/reactive_spells.lua
 lua tests/reactive_feature.lua
 python3 tests/package.py
 python3 scripts/package.py
-python3 -m zipfile -l dist/WarriorAssistForever-0.4.1.zip
+python3 -m zipfile -l dist/WarriorAssistForever-0.4.2.zip
 ```
 
 The integration check loads the actual bundled LibStub and LibCustomGlow with WoW

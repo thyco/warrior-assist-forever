@@ -71,8 +71,12 @@ function panel:Initialize()
     local size = registerSetting("iconSize", "Icon size", Settings.VarType.Number)
     self.controls.iconSize = widgets.Dropdown(section, "Icon size", -232, size, sizes)
 
+    local hideIcon = registerSetting("battleShoutHideIcon", "Hide icon artwork (keep glow)", Settings.VarType.Boolean)
+    self.controls.battleShoutHideIcon = widgets.Checkbox(section,
+        "Hide icon artwork (keep glow)", -269, hideIcon)
+
     local move = CreateFrame("Button", nil, section, "UIPanelButtonTemplate")
-    move:SetPoint("TOPLEFT", section, "TOPLEFT", 20, -282)
+    move:SetPoint("TOPLEFT", section, "TOPLEFT", 20, -306)
     move:SetSize(140, 28)
     move:SetText("Move icon")
     move:SetScript("OnClick", function()

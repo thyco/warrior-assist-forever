@@ -25,6 +25,9 @@ do
     H.equal(addon.SettingsPanel.controls.leadSeconds.options[60].value, 60)
     H.equal(addon.Config.Get("glowColor"), "ff00ff00")
     H.equal(addon.SettingsPanel.controls.battleShoutNativeColor.checked, false)
+    assert(addon.SettingsPanel.controls.battleShoutHideIcon,
+        "Battle Shout hide artwork control exists")
+    H.equal(addon.SettingsPanel.controls.battleShoutHideIcon.checked, false)
     H.equal(addon.SettingsPanel.controls.iconSize.selectedValue, 64)
     H.equal(addon.SettingsPanel.controls.iconSize.options[1].value, 16)
     H.equal(addon.SettingsPanel.controls.iconSize.options[29].value, 128)
@@ -119,6 +122,47 @@ do
     H.equal(world.env.WarriorAssistForeverDB.iconSize, 36)
 end
 
+-- Hiding only the Battle Shout artwork keeps a due reminder and its glow visible.
+do
+    local world, addon = setup()
+    world.combat = true
+    world:fire("PLAYER_REGEN_DISABLED")
+
+    local icon = addon.BattleShoutIcon
+    local glow = addon.Glow.Prepare(icon.frame)
+    H.equal(addon.BattleShoutReminder:Status().output, "icon-missing")
+    H.equal(icon.texture.alpha or 1, 1)
+    H.equal(world.glowActive[icon.frame], true)
+    local shows = glow.frame.showCount
+
+    addon.SettingsPanel.settings.battleShoutHideIcon:SetValue(true)
+    H.equal(icon.texture.alpha, 0, "only Battle Shout artwork is transparent")
+    H.equal(icon.frame:IsVisible(), true, "reminder frame remains visible")
+    H.equal(world.glowActive[icon.frame], true, "glow remains active")
+    H.equal(glow.frame.showCount, shows, "changing artwork does not restart the glow")
+    H.equal(world.env.WarriorAssistForeverDB.battleShoutHideIcon, true)
+
+    addon.SettingsPanel.settings.battleShoutHideIcon:SetValue(false)
+    H.equal(icon.texture.alpha, 1, "artwork returns immediately")
+    H.equal(world.glowActive[icon.frame], true)
+end
+
+-- A transparent icon can still be moved by its visible preview glow.
+do
+    local world, addon = setup()
+    addon.SettingsPanel.settings.battleShoutHideIcon:SetValue(true)
+    addon.SettingsPanel.moveIconButton.scripts.OnClick()
+
+    local icon = addon.BattleShoutIcon
+    H.equal(icon.texture.alpha, 0)
+    H.equal(icon.frame:IsVisible(), true)
+    H.equal(icon.frame.mouse, true)
+    H.equal(world.glowActive[icon.frame], true)
+
+    addon.SettingsPanel.canvas.scripts.OnHide()
+    H.equal(icon.preview, false)
+end
+
 -- Changing the swatch recolors an active glow without showing its overlay again.
 do
     local world, addon = setup()
@@ -184,7 +228,7 @@ do
 
     world.env.SlashCmdList.WARRIORASSISTFOREVER("")
     local result = table.concat(world.printed, "\n")
-    assert(result:find("Warrior Assist Forever 0.4.1 / client 16001 / Warrior active", 1, true))
+    assert(result:find("Warrior Assist Forever 0.4.2 / client 16001 / Warrior active", 1, true))
     assert(result:find("Enabled: true / lead: 10s", 1, true))
     assert(result:find("Battle Shout: unknown / none / due in unknown", 1, true))
     assert(result:find("Reminder: none", 1, true))

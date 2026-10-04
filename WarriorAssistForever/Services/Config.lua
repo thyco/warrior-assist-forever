@@ -6,6 +6,7 @@ local defaults = {
     battleShoutEnabled = true,
     leadSeconds = 10,
     battleShoutNativeColor = false,
+    battleShoutHideIcon = false,
     glowColor = "ff00ff00",
     iconSize = 64,
     iconX = 0,

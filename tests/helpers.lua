@@ -45,6 +45,7 @@ function H.new()
             return {
                 SetAllPoints = function() end,
                 SetTexture = function(texture, path) texture.path = path end,
+                SetAlpha = function(texture, alpha) texture.alpha = alpha end,
                 SetPoint = function() end,
                 SetColorTexture = function(texture, ...) texture.color = { ... } end,
             }

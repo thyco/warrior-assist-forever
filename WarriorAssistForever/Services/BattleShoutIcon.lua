@@ -52,6 +52,7 @@ function Icon:ApplySettings()
     self.frame:SetSize(size, size)
     self.frame:ClearAllPoints()
     self.frame:SetPoint("CENTER", UIParent, "CENTER", addon.Config.Get("iconX"), addon.Config.Get("iconY"))
+    self.texture:SetAlpha(addon.Config.Get("battleShoutHideIcon") and 0 or 1)
 
     local color
     if not addon.Config.Get("battleShoutNativeColor") then
