@@ -216,13 +216,15 @@ function ReactiveSpells.Evaluate(kind, mode)
         local signal = signalFor(id, kind, mode)
         local cooldown = cooldownFor(id)
         local opportunity = signal == mode or (mode == "usable" and signal == "low-rage")
-        if result.id == nil or (opportunity and cooldown == "ready") then
+        local cooldownAllows = kind == "overpower" or cooldown == "ready"
+
+        if result.id == nil or (opportunity and cooldownAllows) then
             result.id = id
             result.signal = signal
             result.cooldown = cooldown
         end
 
-        if opportunity and cooldown == "ready" then
+        if opportunity and cooldownAllows then
             result.ready = true
             break
         end

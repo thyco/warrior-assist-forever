@@ -126,15 +126,15 @@ do
         end
     end)
 
-    H.equal(world.glowActive[world.overpowerButton], false, "GCD flag is not used before cooldown event")
+    H.equal(world.glowActive[world.overpowerButton], true, "Overpower opportunity does not require GCD evidence")
 
     reactiveEvent(world, "SPELL_UPDATE_COOLDOWN")
-    H.equal(world.glowActive[world.overpowerButton], true, "Battle Overpower uses event GCD evidence")
+    H.equal(world.glowActive[world.overpowerButton], true, "Battle Overpower persists after cooldown event")
 
     world.stanceID = 19
     world.overlay[7384] = true
     reactiveEvent(world, "UPDATE_SHAPESHIFT_FORM")
-    H.equal(world.glowActive[world.overpowerButton], true, "Berserker Overpower uses event GCD evidence")
+    H.equal(world.glowActive[world.overpowerButton], true, "Berserker Overpower follows overlay during cooldown")
 
     world.stanceID = 18
     reactiveEvent(world, "UPDATE_SHAPESHIFT_FORM")
@@ -260,10 +260,15 @@ do
     local world, addon = setup()
     world.cooldowns[7384] = { startTime = 100, duration = 2, isActive = true, isEnabled = true }
     reactiveEvent(world, "SPELL_UPDATE_COOLDOWN")
-    H.equal(world.glowActive[world.overpowerButton], false)
+    H.equal(world.glowActive[world.overpowerButton], true, "Battle Overpower glows during own cooldown")
+    H.equal(addon.ReactiveAbilities:Status().overpower.cooldown, "blocked")
+
+    world.env.SlashCmdList.WARRIORASSISTFOREVER("")
+    local diagnostics = table.concat(world.printed, "\n")
+    assert(diagnostics:find("Overpower: learned / ready / usable / blocked / bar 1 button 1 / glow active", 1, true))
 
     world:tick(2.1)
-    H.equal(world.glowActive[world.overpowerButton], true, "poll catches cooldown expiry")
+    H.equal(world.glowActive[world.overpowerButton], true, "glow remains through cooldown expiry")
 
     world.overpowerButton:Hide()
     reactiveEvent(world, "ACTIONBAR_SLOT_CHANGED")
@@ -311,7 +316,7 @@ do
 
     world.cooldowns[7384] = world.secret
     reactiveEvent(world, "SPELL_UPDATE_COOLDOWN")
-    H.equal(world.glowActive[world.overpowerButton], false)
+    H.equal(world.glowActive[world.overpowerButton], true, "unreadable cooldown does not hide Overpower opportunity")
 end
 
 do

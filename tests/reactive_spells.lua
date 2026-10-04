@@ -88,9 +88,14 @@ H.equal(status.signal, "inactive")
 world.usable[7384] = true
 world.cooldowns[7384] = { startTime = 95, duration = 10, isActive = true, isEnabled = true }
 status = spells.Evaluate("overpower", "usable")
-H.equal(status.ready, false, "own cooldown blocks")
+H.equal(status.ready, true, "Battle Overpower opportunity glows during its own cooldown")
 H.equal(status.cooldown, "blocked")
 
+world.usable[7384] = false
+status = spells.Evaluate("overpower", "usable")
+H.equal(status.ready, false, "own cooldown does not invent an Overpower opportunity")
+
+world.usable[7384] = true
 world.time = 106
 status = spells.Evaluate("overpower", "usable")
 H.equal(status.ready, true, "expired own cooldown permits")
@@ -117,6 +122,11 @@ higherWorld.overlay[11584] = true
 higherWorld.usable[11584] = false
 status = higher.Evaluate("overpower", "overlay")
 H.equal(status.ready, true, "overlay does not require castability")
+
+higherWorld.cooldowns[11584] = { startTime = 95, duration = 10, isActive = true, isEnabled = true }
+status = higher.Evaluate("overpower", "overlay")
+H.equal(status.ready, true, "Berserker Overpower overlay glows during its own cooldown")
+H.equal(status.cooldown, "blocked")
 
 local absentWorld, absent = setup({ 6572 })
 absentWorld.overlay[7384] = true
@@ -170,7 +180,7 @@ H.equal(status.ready, true, "Revenge stays ready during a GCD with differing tim
 
 ownCooldown[7384] = true
 status = durationSpells.Evaluate("overpower", "usable")
-H.equal(status.ready, false, "Overpower's own cooldown still blocks")
+H.equal(status.ready, true, "Overpower opportunity ignores readable own cooldown")
 H.equal(status.cooldown, "blocked")
 
 ownCooldown[6572] = true
@@ -211,7 +221,8 @@ H.equal(status.ready, true, "Revenge trusts its event GCD flag without a separat
 
 hunterWorld.time = 102
 status = hunterStyle.Evaluate("overpower", "usable")
-H.equal(status.ready, false, "cached Overpower GCD evidence expires without another event")
+H.equal(status.ready, true, "Overpower opportunity persists with unknown cooldown timing")
+H.equal(status.cooldown, "unknown")
 
 status = hunterStyle.Evaluate("revenge", "usable")
 H.equal(status.ready, false, "cached Revenge GCD evidence expires without another event")
