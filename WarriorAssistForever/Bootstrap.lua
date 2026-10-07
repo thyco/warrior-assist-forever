@@ -15,7 +15,7 @@ local auraQualities = { exact = true, estimated = true, none = true }
 local outputs = { none = true, ["icon-late"] = true, ["icon-missing"] = true }
 local stances = { battle = true, defensive = true, berserker = true, unknown = true }
 local signals = { usable = true, ["low-rage"] = true, overlay = true, inactive = true, unknown = true }
-local cooldowns = { ready = true, blocked = true, unknown = true }
+local cooldowns = { ready = true, blocked = true, unknown = true, ["n/a"] = true }
 
 local function member(container, key)
     if not addon.Client.Readable(container) or type(container) ~= "table" then
@@ -85,7 +85,7 @@ local function diagnostics()
         and string.format("%.1fs", math.max(0, deadline - now)) or "unknown"
     local warrior = addon.Client.IsWarrior() and "active" or "inactive"
 
-    print("Warrior Assist Forever 0.4.4 / client 16001 / Warrior " .. warrior)
+    print("Warrior Assist Forever 0.5.0 / client 16001 / Warrior " .. warrior)
     print("Enabled: " .. tostring(addon.Config.Get("battleShoutEnabled"))
         .. " / lead: " .. addon.Config.Get("leadSeconds") .. "s")
     print("Battle Shout: " .. label(aura.state, auraStates, "unknown")
@@ -96,6 +96,7 @@ local function diagnostics()
     print("Stance: " .. label(member(reactive, "stance"), stances, "unknown"))
     reactiveDiagnostics("overpower", "Overpower", member(reactive, "overpower"))
     reactiveDiagnostics("revenge", "Revenge", member(reactive, "revenge"))
+    reactiveDiagnostics("execute", "Execute", member(reactive, "execute"))
 end
 
 SLASH_WARRIORASSISTFOREVER1 = "/waf"

@@ -36,7 +36,7 @@ function panel:Initialize()
     scroll:SetPoint("TOPLEFT", canvas, "TOPLEFT", 0, -8)
     scroll:SetPoint("BOTTOMRIGHT", canvas, "BOTTOMRIGHT", -28, 8)
     local content = CreateFrame("Frame", nil, scroll)
-    content:SetSize(580, 1410)
+    content:SetSize(580, 1710)
     scroll:SetScrollChild(content)
     scroll:SetScript("OnSizeChanged", function(_, width)
         content:SetWidth(math.max(1, width))
@@ -99,6 +99,8 @@ function panel:Initialize()
             description = "Battle Stance usability or Berserker Stance proc overlay" },
         { name = "Revenge", key = "revenge", y = -810, height = 300,
             description = "Defensive Stance usability" },
+        { name = "Execute", key = "execute", y = -1126, height = 300,
+            description = "Battle or Berserker Stance usability" },
     }
 
     for _, ability in ipairs(abilities) do
@@ -138,20 +140,22 @@ function panel:Initialize()
             self.controls.overpowerBerserkerGlowColor = widgets.Color(group,
                 "Berserker Stance color", -346, berserkerColor)
         else
-            local revengeNative = registerSetting("revengeNativeColor",
+            local nativeKey = ability.key .. "NativeColor"
+            local colorKey = ability.key .. "GlowColor"
+            local native = registerSetting(nativeKey,
                 "Use Blizzard native glow", Settings.VarType.Boolean)
-            self.controls.revengeNativeColor = widgets.Checkbox(group,
-                "Use Blizzard native glow", -218, revengeNative)
+            self.controls[nativeKey] = widgets.Checkbox(group,
+                "Use Blizzard native glow", -218, native)
 
-            local revengeColor = registerSetting("revengeGlowColor",
+            local color = registerSetting(colorKey,
                 "Custom glow color", Settings.VarType.String)
-            self.controls.revengeGlowColor = widgets.Color(group,
-                "Custom glow color", -260, revengeColor)
+            self.controls[colorKey] = widgets.Color(group,
+                "Custom glow color", -260, color)
         end
     end
 
     local stance = widgets.Section(content, "Current Stance",
-        "Always-visible icon for Battle, Defensive, or Berserker Stance", -1126, 235)
+        "Always-visible icon for Battle, Defensive, or Berserker Stance", -1442, 235)
     self.sections[#self.sections + 1] = stance
 
     local stanceEnabled = registerSetting("stanceIconEnabled", "Show current stance icon", Settings.VarType.Boolean)

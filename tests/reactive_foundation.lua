@@ -15,6 +15,11 @@ H.equal(addon.Config.Get("overpowerButton"), 1)
 H.equal(addon.Config.Get("revengeEnabled"), true)
 H.equal(addon.Config.Get("revengeBar"), 0)
 H.equal(addon.Config.Get("revengeButton"), 1)
+H.equal(addon.Config.Get("executeEnabled"), true)
+H.equal(addon.Config.Get("executeBar"), 0)
+H.equal(addon.Config.Get("executeButton"), 1)
+H.equal(addon.Config.Get("executeNativeColor"), true)
+H.equal(addon.Config.Get("executeGlowColor"), "ffffd24a")
 H.equal(addon.Config.Get("battleShoutEnabled"), true)
 
 local saved = H.new()
@@ -25,6 +30,11 @@ saved.env.WarriorAssistForeverDB = {
     revengeEnabled = false,
     revengeBar = 1,
     revengeButton = 3,
+    executeEnabled = false,
+    executeBar = 2,
+    executeButton = 6,
+    executeNativeColor = false,
+    executeGlowColor = "ff112233",
 }
 local savedAddon = load(saved)
 
@@ -36,6 +46,11 @@ H.equal(savedAddon.Config.Get("overpowerButton"), 12)
 H.equal(savedAddon.Config.Get("revengeEnabled"), false)
 H.equal(savedAddon.Config.Get("revengeBar"), 1)
 H.equal(savedAddon.Config.Get("revengeButton"), 3)
+H.equal(savedAddon.Config.Get("executeEnabled"), false)
+H.equal(savedAddon.Config.Get("executeBar"), 2)
+H.equal(savedAddon.Config.Get("executeButton"), 6)
+H.equal(savedAddon.Config.Get("executeNativeColor"), false)
+H.equal(savedAddon.Config.Get("executeGlowColor"), "ff112233")
 
 local invalid = H.new()
 local secretBar = 5
@@ -47,6 +62,9 @@ invalid.env.WarriorAssistForeverDB = {
     overpowerButton = 0,
     revengeBar = 1.5,
     revengeButton = "4",
+    executeBar = 9,
+    executeButton = 0,
+    executeGlowColor = "invalid",
 }
 local invalidAddon = load(invalid)
 
@@ -56,9 +74,13 @@ H.equal(invalidAddon.Config.Get("overpowerBar"), 0)
 H.equal(invalidAddon.Config.Get("overpowerButton"), 1)
 H.equal(invalidAddon.Config.Get("revengeBar"), 0)
 H.equal(invalidAddon.Config.Get("revengeButton"), 1)
+H.equal(invalidAddon.Config.Get("executeBar"), 0)
+H.equal(invalidAddon.Config.Get("executeButton"), 1)
+H.equal(invalidAddon.Config.Get("executeGlowColor"), "ffffd24a")
 H.equal(pcall(invalidAddon.Config.Set, "overpowerBar", 9), false)
 H.equal(pcall(invalidAddon.Config.Set, "revengeButton", 13), false)
 H.equal(pcall(invalidAddon.Config.Set, "overpowerButton", secretButton), false)
+H.equal(pcall(invalidAddon.Config.Set, "executeButton", 13), false)
 
 local positions = {
     { "ActionButton", "Main bar" },

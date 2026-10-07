@@ -26,14 +26,15 @@ local function setup(options)
     }
     world.env.C_SpellBook = {
         GetNumSpellBookSkillLines = function() return 1 end,
-        GetSpellBookSkillLineInfo = function() return { itemIndexOffset = 0, numSpellBookItems = 2 } end,
+        GetSpellBookSkillLineInfo = function() return { itemIndexOffset = 0, numSpellBookItems = 3 } end,
         GetSpellBookItemInfo = function(index)
             return { itemType = 1, isPassive = false, isOffSpec = false,
-                spellID = index == 1 and 7384 or 6572 }
+                spellID = index == 1 and 7384 or (index == 2 and 6572 or 5308) }
         end,
     }
     world.env.C_Spell.GetSpellInfo = function(id)
-        local names = { [7384] = "Overpower", [6572] = "Revenge", [6673] = "Battle Shout" }
+        local names = { [7384] = "Overpower", [6572] = "Revenge",
+            [5308] = "Execute", [6673] = "Battle Shout" }
         return names[id] and { name = names[id] }
     end
     world.env.C_Spell.IsSpellUsable = function(id)
@@ -52,10 +53,58 @@ local function setup(options)
     return world, addon
 end
 
+local function setupExecute()
+    return setup(function(world)
+        world.env.WarriorAssistForeverDB.executeBar = 1
+        world.env.WarriorAssistForeverDB.executeButton = 3
+        world.executeButton = world:newFrame()
+        world.env.ActionButton3 = world.executeButton
+        world.usable[5308] = true
+    end)
+end
+
 local function reactiveEvent(world, event, ...)
     local frame = world.addon.ReactiveAbilities.frame
     assert(frame.events[event] == true, "event must be registered: " .. event)
     frame.scripts.OnEvent(frame, event, ...)
+end
+
+-- Execute has a separate selected button and uses the same opportunity in both permitted stances.
+do
+    local world, addon = setupExecute()
+
+    H.equal(world.glowActive[world.executeButton], true, "Battle Execute glows when usable without combat")
+    H.equal(world.glowActive[world.overpowerButton], true, "Execute does not replace Overpower")
+    H.equal(addon.ReactiveAbilities:Status().execute.cooldown, "n/a")
+
+    world.env.SlashCmdList.WARRIORASSISTFOREVER("")
+    local diagnostics = table.concat(world.printed, "\n")
+    assert(diagnostics:find("Execute: learned / ready / usable / n/a / bar 1 button 3 / glow active", 1, true))
+
+    world.stanceID = 18
+    reactiveEvent(world, "UPDATE_SHAPESHIFT_FORM")
+    H.equal(world.glowActive[world.executeButton], false, "Defensive Stance suppresses Execute")
+
+    world.stanceID = 19
+    reactiveEvent(world, "UPDATE_SHAPESHIFT_FORM")
+    H.equal(world.glowActive[world.executeButton], true, "Berserker Execute uses usability")
+
+    world.usable[5308] = false
+    world.insufficientPower[5308] = true
+    reactiveEvent(world, "SPELL_UPDATE_USABLE")
+    H.equal(world.glowActive[world.executeButton], true, "low rage does not hide Execute")
+
+    world.insufficientPower[5308] = false
+    reactiveEvent(world, "SPELL_UPDATE_USABLE")
+    H.equal(world.glowActive[world.executeButton], false, "no Execute opportunity stays dark")
+
+    world.usable[5308] = true
+    world.cooldowns[5308] = { startTime = 100, duration = 2, isActive = true, isEnabled = true }
+    reactiveEvent(world, "SPELL_UPDATE_COOLDOWN")
+    H.equal(world.glowActive[world.executeButton], true, "Execute does not use cooldown readiness")
+
+    addon.Config.Set("executeEnabled", false)
+    H.equal(world.glowActive[world.executeButton], false, "disabling Execute clears its glow")
 end
 
 -- Resource shortage keeps a reactive opportunity visible in its permitted stance.
@@ -409,6 +458,24 @@ do
 
     addon.Config.Set("revengeNativeColor", true)
     H.equal(world.glows[entry.frame].color, nil, "Revenge restores native glow")
+end
+
+-- Execute keeps one native or custom color across Battle and Berserker Stance.
+do
+    local world, addon = setupExecute()
+    local entry = addon.Glow.Prepare(world.executeButton)
+    H.equal(world.glows[entry.frame].color, nil, "Execute defaults to native glow")
+
+    addon.Config.Set("executeNativeColor", false)
+    addon.Config.Set("executeGlowColor", "ff0000ff")
+    H.equal(world.glows[entry.frame].color[3], 1, "Battle Execute uses the custom color")
+
+    world.stanceID = 19
+    reactiveEvent(world, "UPDATE_SHAPESHIFT_FORM")
+    H.equal(world.glows[entry.frame].color[3], 1, "Berserker Execute keeps the same custom color")
+
+    addon.Config.Set("executeNativeColor", true)
+    H.equal(world.glows[entry.frame].color, nil, "Execute restores native glow")
 end
 
 print("reactive feature: PASS")

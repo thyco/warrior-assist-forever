@@ -27,6 +27,11 @@ local defaults = {
     revengeButton = 1,
     revengeNativeColor = true,
     revengeGlowColor = "ff00bfa5",
+    executeEnabled = true,
+    executeBar = 0,
+    executeButton = 1,
+    executeNativeColor = true,
+    executeGlowColor = "ffffd24a",
 }
 local values
 local listeners = {}
@@ -35,6 +40,7 @@ local colorKeys = {
     overpowerBattleGlowColor = true,
     overpowerBerserkerGlowColor = true,
     revengeGlowColor = true,
+    executeGlowColor = true,
 }
 
 local function validValue(key, value)
@@ -46,11 +52,11 @@ local function validValue(key, value)
         return false
     end
 
-    if key == "overpowerBar" or key == "revengeBar" then
+    if key == "overpowerBar" or key == "revengeBar" or key == "executeBar" then
         return value >= 0 and value <= 8 and value == math.floor(value)
     end
 
-    if key == "overpowerButton" or key == "revengeButton" then
+    if key == "overpowerButton" or key == "revengeButton" or key == "executeButton" then
         return value >= 1 and value <= 12 and value == math.floor(value)
     end
 

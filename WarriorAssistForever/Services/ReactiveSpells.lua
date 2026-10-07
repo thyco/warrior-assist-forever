@@ -1,8 +1,8 @@
 local _, addon = ...
-local ReactiveSpells = { ids = { overpower = {}, revenge = {} }, gcdOnly = {} }
+local ReactiveSpells = { ids = { overpower = {}, revenge = {}, execute = {} }, gcdOnly = {} }
 addon.ReactiveSpells = ReactiveSpells
 
-local seeds = { overpower = 7384, revenge = 6572 }
+local seeds = { overpower = 7384, revenge = 6572, execute = 5308 }
 local gcdEvidenceSeconds = 1.6
 
 local function read(api, ...)
@@ -50,8 +50,8 @@ end
 
 function ReactiveSpells.Rebuild()
     local names = {}
-    local seen = { overpower = {}, revenge = {} }
-    ReactiveSpells.ids = { overpower = {}, revenge = {} }
+    local seen = { overpower = {}, revenge = {}, execute = {} }
+    ReactiveSpells.ids = { overpower = {}, revenge = {}, execute = {} }
     ReactiveSpells.gcdOnly = {}
 
     for kind, seed in pairs(seeds) do
@@ -86,11 +86,13 @@ function ReactiveSpells.ObserveCooldownEvent()
     if not deadline then return end
 
     -- Like Hunter's reactive glow, sample isOnGCD only inside this event.
-    for _, ranks in pairs(ReactiveSpells.ids) do
-        for _, id in ipairs(ranks) do
-            local info = read(spellAPI("GetSpellCooldown"), id)
-            if addon.Client.Boolean(member(info, "isOnGCD")) == true then
-                ReactiveSpells.gcdOnly[id] = deadline
+    for kind, ranks in pairs(ReactiveSpells.ids) do
+        if kind ~= "execute" then
+            for _, id in ipairs(ranks) do
+                local info = read(spellAPI("GetSpellCooldown"), id)
+                if addon.Client.Boolean(member(info, "isOnGCD")) == true then
+                    ReactiveSpells.gcdOnly[id] = deadline
+                end
             end
         end
     end
@@ -214,9 +216,9 @@ function ReactiveSpells.Evaluate(kind, mode)
 
     for _, id in ipairs(ranks) do
         local signal = signalFor(id, kind, mode)
-        local cooldown = cooldownFor(id)
+        local cooldown = kind == "execute" and "n/a" or cooldownFor(id)
         local opportunity = signal == mode or (mode == "usable" and signal == "low-rage")
-        local cooldownAllows = kind == "overpower" or cooldown == "ready"
+        local cooldownAllows = kind == "overpower" or kind == "execute" or cooldown == "ready"
 
         if result.id == nil or (opportunity and cooldownAllows) then
             result.id = id

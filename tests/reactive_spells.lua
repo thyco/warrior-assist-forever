@@ -7,7 +7,8 @@ local function setup(learned)
     world.insufficientPower = {}
     world.overlay = {}
     world.cooldowns = {}
-    world.names = { [7384] = "Frappe dominante", [6572] = "Revanche", [11584] = "Frappe dominante" }
+    world.names = { [7384] = "Frappe dominante", [6572] = "Revanche",
+        [11584] = "Frappe dominante", [5308] = "Exécution", [20658] = "Exécution" }
     world.time = 100
     world.env.Enum = {
         SpellBookSpellBank = { Player = 0 },
@@ -48,6 +49,34 @@ H.equal(status.ready, true, "readable usability permits learned Overpower")
 H.equal(status.id, 7384)
 H.equal(status.signal, "usable")
 H.equal(status.cooldown, "ready")
+
+local executeWorld, executeSpells = setup({ 20658 })
+executeWorld.usable[20658] = true
+executeWorld.cooldowns[20658] = { startTime = 95, duration = 10, isActive = true, isEnabled = true }
+
+status = executeSpells.Evaluate("execute", "usable")
+H.equal(status.learned, true, "localized higher Execute rank is learned")
+H.equal(status.id, 20658)
+H.equal(status.ready, true, "Execute usability drives its opportunity without a cooldown gate")
+H.equal(status.signal, "usable")
+H.equal(status.cooldown, "n/a")
+
+executeWorld.usable[20658] = false
+executeWorld.insufficientPower[20658] = true
+status = executeSpells.Evaluate("execute", "usable")
+H.equal(status.ready, true, "low rage does not hide an Execute opportunity")
+H.equal(status.signal, "low-rage")
+
+executeWorld.insufficientPower[20658] = false
+status = executeSpells.Evaluate("execute", "usable")
+H.equal(status.ready, false, "Execute stays dark when the client reports another unusable reason")
+H.equal(status.signal, "inactive")
+
+local unlearnedExecuteWorld, unlearnedExecute = setup({ 6572 })
+unlearnedExecuteWorld.usable[5308] = true
+status = unlearnedExecute.Evaluate("execute", "usable")
+H.equal(status.learned, false)
+H.equal(status.ready, false, "unlearned Execute cannot glow")
 
 local rageWorld, rageSpells = setup()
 rageWorld.usable[7384] = false

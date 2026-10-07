@@ -7,7 +7,7 @@ The addon does not cast spells or change bindings.
 
 ## Installation
 
-Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.4.4.zip`.
+Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.5.0.zip`.
 Extract the ZIP into the client's `Interface/AddOns` directory so the manifest is
 `Interface/AddOns/WarriorAssistForever/WarriorAssistForever.toc`. Enable Warrior
 Assist Forever in the AddOns list and log in or reload. LibStub and LibCustomGlow,
@@ -34,26 +34,30 @@ position are saved across reloads. It accepts mouse input only while you are
 moving it from settings. During normal play, the world map covers the stance
 icon where they overlap.
 
-Overpower and Revenge each have their own enable toggle, action bar, and button
-selection. Both are enabled by default, but their bars start at **Not selected**:
-choose a supported default bar and button 1–12 for each glow. The choices are
+Overpower, Revenge, and Execute each have their own enable toggle, action bar,
+and button selection. All are enabled by default, but their bars start at
+**Not selected**: choose a supported default bar and button 1–12 for each glow. The choices are
 independent, saved across reloads, and apply immediately. They identify a physical
 button position, including after action bar paging; the addon does not inspect,
 cast, or rewrite the spell or macro on that button. You may place a stance-switch
 macro for Overpower on the selected button while in Berserker Stance. The glow
 prompts you to press it; it does not switch stance or cast for you. Overpower has
 independent Blizzard-native or custom color settings for Battle and Berserker
-Stance. Revenge has its own native or custom color setting. All three reactive
-glow modes use Blizzard's native appearance by default.
+Stance. Revenge and Execute each have one native or custom color setting; Execute
+uses the same color in both supported stances. Reactive glows use Blizzard's
+native appearance by default.
 
 In Battle Stance, a learned Overpower must be reported usable or blocked only by
 insufficient rage. In Berserker Stance, its spell activation overlay must be
 reported; ordinary castability is not required there. Overpower can glow during
 its own cooldown while that opportunity is active. Revenge uses the same
 rage-independent usability signal and requires its own cooldown to be ready in
-Defensive Stance. The glows can appear out of combat and without a target or
-mouseover. An absent, hidden, or unselected
-button stays dark. Battle Shout remains combat only.
+Defensive Stance. Neither glow has an addon-level combat or target check.
+Execute glows in Battle or Berserker Stance when a learned rank is
+reported usable or blocked only by insufficient rage. It does not check a
+cooldown. Execute stays dark in Defensive Stance. It also has no addon-level
+combat or target check; the client's usability signal may depend on the target.
+An absent, hidden, or unselected button stays dark. Battle Shout remains combat only.
 
 When Battle Shout is due, the movable screen icon glows in combat, whether or not
 CDM displays the buff. A confirmed missing buff uses the same icon. The addon does
@@ -96,8 +100,9 @@ Reactive glows require readable learned ranks and client opportunity evidence.
 Unknown, secret, malformed, or failing stance, overlay, or usability data leaves
 the affected glow dark. Overpower does not require cooldown evidence, though
 `/waf` still reports its cooldown as `ready`, `blocked`, or `unknown`. Revenge
-continues to require a ready own cooldown. Following Hunter's Mongoose Bite
-cooldown logic for Revenge, the addon captures `isOnGCD` on
+continues to require a ready own cooldown. Execute has no own cooldown check;
+`/waf` reports `n/a` for it. Following Hunter's Mongoose Bite cooldown logic
+for Revenge, the addon captures `isOnGCD` on
 `SPELL_UPDATE_COOLDOWN` without requiring a separate global cooldown query.
 A readable own cooldown blocks Revenge's glow. When its cooldown timing is
 restricted, the event flag keeps it ready for up to 1.6 seconds; a later
@@ -110,7 +115,9 @@ insufficient power as the reason for an otherwise active opportunity.
 
 A newly available button that cannot be
 prepared during combat stays dark until a safe update. The client may make
-usability depend on target state even though this addon has no target check.
+usability depend on target state even though this addon has no separate target
+check. For Execute, the client must expose its usable or insufficient-rage signal;
+the addon does not compute a target health threshold.
 Whether Forever reports an Overpower overlay in Berserker Stance must be confirmed
 in game; the addon does not invent a dodge/block/parry timer when it is absent.
 
@@ -119,8 +126,8 @@ in game; the addon does not invent a dodge/block/parry timer when it is absent.
 Use `/waf` for addon/client version, Warrior activation, enabled state, lead time,
 aura state (`present`, `missing`, `unknown`), timing quality (`exact`, `estimated`,
 `none`), remaining time when known, and selected reminder (`none`, `icon-late`,
-`icon-missing`). It also reports stance, whether an Overpower or
-Revenge rank is known, ready state, usability or overlay evidence, cooldown,
+`icon-missing`). It also reports stance, whether an Overpower, Revenge, or
+Execute rank is known, ready state, usability or overlay evidence, cooldown,
 selected position, and glow activity. Unknown or restricted values use bounded
 labels; raw spell IDs and restricted API results are not printed.
 
@@ -178,7 +185,15 @@ These checks remain required; no WoW Forever client was available for local test
    switch between them while each glow is active. Check that each stance restores
    its own color, Blizzard native mode works for both, and Revenge keeps its own
    choice.
-10. With no target and outside combat, confirm the stance icon shows the current
+10. Select a separate Execute button in `/waf config`. With an Execute-eligible
+    target, verify its glow in Battle and Berserker Stance, and confirm it clears
+    in Defensive Stance or when the client reports no opportunity. Lower rage
+    below Execute's cost while the target remains eligible; the glow should stay
+    visible and `/waf` should report `low-rage`. Check the client signal with no
+    target, since local mocks cannot establish its target behavior. Change
+    Execute's custom color and switch stances; both supported stances should use
+    the same color. Confirm native mode, disable, and reload behavior.
+11. With no target and outside combat, confirm the stance icon shows the current
     stance. Change its size and move it in settings, then reload and confirm its
     position. Switch through Battle, Defensive, and Berserker Stance in and out of
     combat; the artwork should update and the icon should stay visible. Disable
@@ -207,7 +222,7 @@ lua tests/reactive_spells.lua
 lua tests/reactive_feature.lua
 python3 tests/package.py
 python3 scripts/package.py
-python3 -m zipfile -l dist/WarriorAssistForever-0.4.4.zip
+python3 -m zipfile -l dist/WarriorAssistForever-0.5.0.zip
 ```
 
 The integration check loads the actual bundled LibStub and LibCustomGlow with WoW

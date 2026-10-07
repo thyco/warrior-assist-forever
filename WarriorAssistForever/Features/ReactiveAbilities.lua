@@ -2,6 +2,7 @@ local _, addon = ...
 local ReactiveAbilities = { running = false, elapsed = 0 }
 addon.ReactiveAbilities = ReactiveAbilities
 
+local executeStyle = { native = "executeNativeColor", custom = "executeGlowColor" }
 local definitions = {
     overpower = { owner = "overpower", enabled = "overpowerEnabled",
         bar = "overpowerBar", button = "overpowerButton",
@@ -16,8 +17,12 @@ local definitions = {
         colors = {
             defensive = { native = "revengeNativeColor", custom = "revengeGlowColor" },
         } },
+    execute = { owner = "execute", enabled = "executeEnabled",
+        bar = "executeBar", button = "executeButton",
+        modes = { battle = "usable", berserker = "usable" },
+        colors = { battle = executeStyle, berserker = executeStyle } },
 }
-local order = { "overpower", "revenge" }
+local order = { "overpower", "revenge", "execute" }
 local events = {
     "UPDATE_SHAPESHIFT_FORM", "SPELL_UPDATE_USABLE", "SPELL_UPDATE_COOLDOWN",
     "SPELL_ACTIVATION_OVERLAY_GLOW_SHOW", "SPELL_ACTIVATION_OVERLAY_GLOW_HIDE",
@@ -186,9 +191,11 @@ function ReactiveAbilities:Stop()
     end
 
     self.buttons = {}
-    self.status = { stance = "unknown", overpower = emptyStatus(), revenge = emptyStatus() }
+    self.status = { stance = "unknown", overpower = emptyStatus(),
+        revenge = emptyStatus(), execute = emptyStatus() }
 end
 
 function ReactiveAbilities:Status()
-    return self.status or { stance = "unknown", overpower = emptyStatus(), revenge = emptyStatus() }
+    return self.status or { stance = "unknown", overpower = emptyStatus(),
+        revenge = emptyStatus(), execute = emptyStatus() }
 end
