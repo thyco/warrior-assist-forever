@@ -40,6 +40,10 @@ local function setup(options)
     world.env.C_Spell.IsSpellUsable = function(id)
         return world.usable[id], world.insufficientPower[id] or false
     end
+    world.env.C_Spell.IsSpellInRange = function(id, unit)
+        H.equal(unit, "target", "Execute range checks the current target")
+        return world.executeRange
+    end
     world.env.C_Spell.GetSpellCooldown = function(id) return world.cooldowns[id] end
     world.env.C_SpellActivationOverlay = {
         IsSpellOverlayed = function(id) return world.overlay[id] end,
@@ -60,6 +64,7 @@ local function setupExecute()
         world.executeButton = world:newFrame()
         world.env.ActionButton3 = world.executeButton
         world.usable[5308] = true
+        world.executeRange = true
     end)
 end
 
@@ -76,10 +81,11 @@ do
     H.equal(world.glowActive[world.executeButton], true, "Battle Execute glows when usable without combat")
     H.equal(world.glowActive[world.overpowerButton], true, "Execute does not replace Overpower")
     H.equal(addon.ReactiveAbilities:Status().execute.cooldown, "n/a")
+    H.equal(addon.ReactiveAbilities:Status().execute.range, "in")
 
     world.env.SlashCmdList.WARRIORASSISTFOREVER("")
     local diagnostics = table.concat(world.printed, "\n")
-    assert(diagnostics:find("Execute: learned / ready / usable / n/a / bar 1 button 3 / glow active", 1, true))
+    assert(diagnostics:find("Execute: learned / ready / usable / n/a / range in / bar 1 button 3 / glow active", 1, true))
 
     world.stanceID = 18
     reactiveEvent(world, "UPDATE_SHAPESHIFT_FORM")
@@ -105,6 +111,33 @@ do
 
     addon.Config.Set("executeEnabled", false)
     H.equal(world.glowActive[world.executeButton], false, "disabling Execute clears its glow")
+end
+
+-- Out of combat, Execute needs a confirmed in-range target; combat keeps its opportunity glow.
+do
+    local world, addon = setupExecute()
+
+    world.executeRange = false
+    addon.ReactiveAbilities:Refresh()
+    H.equal(world.glowActive[world.executeButton], false, "out-of-range target clears Execute glow")
+    H.equal(addon.ReactiveAbilities:Status().execute.range, "out")
+
+    world.executeRange = nil
+    addon.ReactiveAbilities:Refresh()
+    H.equal(world.glowActive[world.executeButton], false, "missing target stays dark outside combat")
+
+    world.combat = true
+    addon.ReactiveAbilities:Refresh()
+    H.equal(world.glowActive[world.executeButton], true, "combat opportunity glows without a range result")
+    H.equal(addon.ReactiveAbilities:Status().execute.range, "skipped")
+
+    world.combat = false
+    addon.ReactiveAbilities:Refresh()
+    H.equal(world.glowActive[world.executeButton], false, "leaving combat reapplies the range requirement")
+
+    world.executeRange = true
+    addon.ReactiveAbilities:Refresh()
+    H.equal(world.glowActive[world.executeButton], true, "in-range target restores Execute glow")
 end
 
 -- Resource shortage keeps a reactive opportunity visible in its permitted stance.

@@ -128,6 +128,14 @@ local function signalFor(id, kind, mode)
     return "unknown"
 end
 
+local function rangeFor(id)
+    local inRange = addon.Client.Boolean(read(spellAPI("IsSpellInRange"), id, "target"))
+    if inRange == true then return "in" end
+    if inRange == false then return "out" end
+
+    return "unknown"
+end
+
 local function eventGCDReady(id)
     local deadline = ReactiveSpells.gcdOnly[id]
     if not deadline then return false end
@@ -202,7 +210,8 @@ local function cooldownFor(id)
 end
 
 function ReactiveSpells.Evaluate(kind, mode)
-    local result = { ready = false, learned = false, id = nil, signal = "unknown", cooldown = "unknown" }
+    local result = { ready = false, learned = false, id = nil, signal = "unknown",
+        cooldown = "unknown", range = "unknown" }
     if not addon.Client.Readable(kind) or not addon.Client.Readable(mode)
         or type(kind) ~= "string" or type(mode) ~= "string"
         or not seeds[kind] or (mode ~= "usable" and mode ~= "overlay") then
@@ -213,20 +222,24 @@ function ReactiveSpells.Evaluate(kind, mode)
     if #ranks == 0 then return result end
 
     result.learned = true
+    local inCombat = kind == "execute" and addon.Client.InCombat()
 
     for _, id in ipairs(ranks) do
         local signal = signalFor(id, kind, mode)
         local cooldown = kind == "execute" and "n/a" or cooldownFor(id)
+        local range = kind == "execute" and (inCombat and "skipped" or rangeFor(id)) or "n/a"
         local opportunity = signal == mode or (mode == "usable" and signal == "low-rage")
         local cooldownAllows = kind == "overpower" or kind == "execute" or cooldown == "ready"
+        local rangeAllows = kind ~= "execute" or range == "skipped" or range == "in"
 
         if result.id == nil or (opportunity and cooldownAllows) then
             result.id = id
             result.signal = signal
             result.cooldown = cooldown
+            result.range = range
         end
 
-        if opportunity and cooldownAllows then
+        if opportunity and cooldownAllows and rangeAllows then
             result.ready = true
             break
         end

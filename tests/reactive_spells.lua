@@ -5,6 +5,7 @@ local function setup(learned)
     world.learned = learned or { 7384, 6572 }
     world.usable = {}
     world.insufficientPower = {}
+    world.range = { [20658] = true }
     world.overlay = {}
     world.cooldowns = {}
     world.names = { [7384] = "Frappe dominante", [6572] = "Revanche",
@@ -28,6 +29,11 @@ local function setup(learned)
     end
     world.env.C_Spell.IsSpellUsable = function(id)
         return world.usable[id], world.insufficientPower[id] or false
+    end
+    world.env.C_Spell.IsSpellInRange = function(id, unit)
+        H.equal(unit, "target", "Execute range checks the current target")
+        if world.rangeError then error("restricted range") end
+        return world.range[id]
     end
     world.env.C_Spell.GetSpellCooldown = function(id) return world.cooldowns[id] end
     world.env.C_SpellActivationOverlay = {
@@ -60,12 +66,50 @@ H.equal(status.id, 20658)
 H.equal(status.ready, true, "Execute usability drives its opportunity without a cooldown gate")
 H.equal(status.signal, "usable")
 H.equal(status.cooldown, "n/a")
+H.equal(status.range, "in")
+
+executeWorld.range[20658] = false
+status = executeSpells.Evaluate("execute", "usable")
+H.equal(status.ready, false, "out-of-combat Execute stays dark out of range")
+H.equal(status.range, "out")
+
+executeWorld.combat = true
+status = executeSpells.Evaluate("execute", "usable")
+H.equal(status.ready, true, "combat Execute ignores range")
+H.equal(status.range, "skipped")
+
+executeWorld.combat = false
+executeWorld.range[20658] = nil
+status = executeSpells.Evaluate("execute", "usable")
+H.equal(status.ready, false, "no target or unreadable range hides Execute out of combat")
+H.equal(status.range, "unknown")
+
+local secretRange = {}
+executeWorld.secret[secretRange] = true
+executeWorld.range[20658] = secretRange
+status = executeSpells.Evaluate("execute", "usable")
+H.equal(status.ready, false, "secret range cannot enable an out-of-combat Execute glow")
+H.equal(status.range, "unknown")
+
+executeWorld.rangeError = true
+status = executeSpells.Evaluate("execute", "usable")
+H.equal(status.ready, false, "range API errors cannot enable out-of-combat Execute")
+H.equal(status.range, "unknown")
+
+executeWorld.rangeError = false
+executeWorld.range[20658] = true
 
 executeWorld.usable[20658] = false
 executeWorld.insufficientPower[20658] = true
 status = executeSpells.Evaluate("execute", "usable")
 H.equal(status.ready, true, "low rage does not hide an Execute opportunity")
 H.equal(status.signal, "low-rage")
+
+executeWorld.range[20658] = false
+status = executeSpells.Evaluate("execute", "usable")
+H.equal(status.ready, false, "low rage does not bypass Execute range out of combat")
+
+executeWorld.range[20658] = true
 
 executeWorld.insufficientPower[20658] = false
 status = executeSpells.Evaluate("execute", "usable")

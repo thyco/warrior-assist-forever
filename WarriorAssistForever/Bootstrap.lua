@@ -16,6 +16,7 @@ local outputs = { none = true, ["icon-late"] = true, ["icon-missing"] = true }
 local stances = { battle = true, defensive = true, berserker = true, unknown = true }
 local signals = { usable = true, ["low-rage"] = true, overlay = true, inactive = true, unknown = true }
 local cooldowns = { ready = true, blocked = true, unknown = true, ["n/a"] = true }
+local ranges = { ["in"] = true, out = true, skipped = true, unknown = true }
 
 local function member(container, key)
     if not addon.Client.Readable(container) or type(container) ~= "table" then
@@ -61,10 +62,14 @@ local function booleanLabel(value, yes, no, fallback)
 end
 
 local function reactiveDiagnostics(kind, title, status)
+    local range = kind == "execute" and
+        " / range " .. label(member(status, "range"), ranges, "unknown") or ""
+
     print(title .. ": " .. learnedLabel(kind)
         .. " / " .. booleanLabel(member(status, "ready"), "ready", "not ready", "unknown")
         .. " / " .. label(member(status, "signal"), signals, "unknown")
         .. " / " .. label(member(status, "cooldown"), cooldowns, "unknown")
+        .. range
         .. " / " .. selectionLabel(kind)
         .. " / glow " .. booleanLabel(member(status, "active"), "active", "inactive", "inactive"))
 end
@@ -85,7 +90,7 @@ local function diagnostics()
         and string.format("%.1fs", math.max(0, deadline - now)) or "unknown"
     local warrior = addon.Client.IsWarrior() and "active" or "inactive"
 
-    print("Warrior Assist Forever 0.5.0 / client 16001 / Warrior " .. warrior)
+    print("Warrior Assist Forever 0.5.1 / client 16001 / Warrior " .. warrior)
     print("Enabled: " .. tostring(addon.Config.Get("battleShoutEnabled"))
         .. " / lead: " .. addon.Config.Get("leadSeconds") .. "s")
     print("Battle Shout: " .. label(aura.state, auraStates, "unknown")

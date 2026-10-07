@@ -37,7 +37,7 @@ local rebuildEvents = {
 }
 
 local function emptyStatus()
-    return { ready = false, signal = "unknown", cooldown = "unknown", active = false }
+    return { ready = false, signal = "unknown", cooldown = "unknown", range = "unknown", active = false }
 end
 
 local function selected(definition)
@@ -149,6 +149,7 @@ function ReactiveAbilities:Refresh()
             status.ready = result.ready
             status.signal = result.signal
             status.cooldown = result.cooldown
+            status.range = result.range
             status.active = result.ready and addon.Glow.IsPrepared(button)
         end
 
