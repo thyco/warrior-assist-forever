@@ -23,7 +23,8 @@ local definitions = {
         modes = { battle = "usable", berserker = "usable" },
         colors = { battle = executeStyle, berserker = executeStyle } },
     victoryRush = { owner = "victoryRush", enabled = "victoryRushEnabled",
-        bar = "victoryRushBar", button = "victoryRushButton", combatOnly = true,
+        bar = "victoryRushBar", button = "victoryRushButton",
+        combatOnly = "victoryRushCombatOnly",
         modes = { battle = "usable", defensive = "usable", berserker = "usable" },
         colors = { battle = victoryRushStyle, defensive = victoryRushStyle,
             berserker = victoryRushStyle } },
@@ -150,8 +151,10 @@ function ReactiveAbilities:Refresh()
 
         local status = emptyStatus()
         local mode = definition.modes[stance]
+        local combatAllowed = not definition.combatOnly
+            or not addon.Config.Get(definition.combatOnly) or addon.Client.InCombat()
         if addon.Config.Get(definition.enabled) and mode and shown
-            and (not definition.combatOnly or addon.Client.InCombat()) then
+            and combatAllowed then
             local result = addon.ReactiveSpells.Evaluate(kind, mode)
             status.ready = result.ready
             status.signal = result.signal

@@ -21,6 +21,7 @@ H.equal(addon.Config.Get("executeButton"), 1)
 H.equal(addon.Config.Get("executeNativeColor"), true)
 H.equal(addon.Config.Get("executeGlowColor"), "ffffd24a")
 H.equal(addon.Config.Get("victoryRushEnabled"), true)
+H.equal(addon.Config.Get("victoryRushCombatOnly"), true)
 H.equal(addon.Config.Get("victoryRushBar"), 0)
 H.equal(addon.Config.Get("victoryRushButton"), 1)
 H.equal(addon.Config.Get("victoryRushNativeColor"), true)
@@ -41,6 +42,7 @@ saved.env.WarriorAssistForeverDB = {
     executeNativeColor = false,
     executeGlowColor = "ff112233",
     victoryRushEnabled = false,
+    victoryRushCombatOnly = false,
     victoryRushBar = 4,
     victoryRushButton = 8,
     victoryRushNativeColor = false,
@@ -62,6 +64,7 @@ H.equal(savedAddon.Config.Get("executeButton"), 6)
 H.equal(savedAddon.Config.Get("executeNativeColor"), false)
 H.equal(savedAddon.Config.Get("executeGlowColor"), "ff112233")
 H.equal(savedAddon.Config.Get("victoryRushEnabled"), false)
+H.equal(savedAddon.Config.Get("victoryRushCombatOnly"), false)
 H.equal(savedAddon.Config.Get("victoryRushBar"), 4)
 H.equal(savedAddon.Config.Get("victoryRushButton"), 8)
 H.equal(savedAddon.Config.Get("victoryRushNativeColor"), false)
@@ -83,6 +86,7 @@ invalid.env.WarriorAssistForeverDB = {
     victoryRushBar = 9,
     victoryRushButton = 0,
     victoryRushGlowColor = "invalid",
+    victoryRushCombatOnly = "off",
 }
 local invalidAddon = load(invalid)
 
@@ -98,6 +102,7 @@ H.equal(invalidAddon.Config.Get("executeGlowColor"), "ffffd24a")
 H.equal(invalidAddon.Config.Get("victoryRushBar"), 0)
 H.equal(invalidAddon.Config.Get("victoryRushButton"), 1)
 H.equal(invalidAddon.Config.Get("victoryRushGlowColor"), "ffffd24a")
+H.equal(invalidAddon.Config.Get("victoryRushCombatOnly"), true)
 H.equal(pcall(invalidAddon.Config.Set, "overpowerBar", 9), false)
 H.equal(pcall(invalidAddon.Config.Set, "revengeButton", 13), false)
 H.equal(pcall(invalidAddon.Config.Set, "overpowerButton", secretButton), false)
@@ -105,11 +110,11 @@ H.equal(pcall(invalidAddon.Config.Set, "executeButton", 13), false)
 H.equal(pcall(invalidAddon.Config.Set, "victoryRushButton", 13), false)
 
 local positions = {
-    { "ActionButton", "Main bar" },
-    { "MultiBarBottomLeftButton", "Bottom left bar" },
-    { "MultiBarBottomRightButton", "Bottom right bar" },
-    { "MultiBarRightButton", "Right bar" },
-    { "MultiBarLeftButton", "Left bar (second right bar)" },
+    { "ActionButton", "Action bar 1" },
+    { "MultiBarBottomLeftButton", "Action bar 2" },
+    { "MultiBarBottomRightButton", "Action bar 3" },
+    { "MultiBarRightButton", "Action bar 4" },
+    { "MultiBarLeftButton", "Action bar 5" },
     { "MultiBar5Button", "Action bar 6" },
     { "MultiBar6Button", "Action bar 7" },
     { "MultiBar7Button", "Action bar 8" },

@@ -33,6 +33,7 @@ local defaults = {
     executeNativeColor = true,
     executeGlowColor = "ffffd24a",
     victoryRushEnabled = true,
+    victoryRushCombatOnly = true,
     victoryRushBar = 0,
     victoryRushButton = 1,
     victoryRushNativeColor = true,

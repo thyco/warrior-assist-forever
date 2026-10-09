@@ -7,7 +7,7 @@ The addon does not cast spells or change bindings.
 
 ## Installation
 
-Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.6.0.zip`.
+Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.6.1.zip`.
 Extract the ZIP into the client's `Interface/AddOns` directory so the manifest is
 `Interface/AddOns/WarriorAssistForever/WarriorAssistForever.toc`. Enable Warrior
 Assist Forever in the AddOns list and log in or reload. LibStub and LibCustomGlow,
@@ -39,8 +39,14 @@ and button selection. All are enabled by default, but their bars start at
 **Not selected**: choose a supported default bar and button 1–12 for each glow. The choices are
 independent, saved across reloads, and apply immediately. They identify a physical
 button position, including after action bar paging; the addon does not inspect,
-cast, or rewrite the spell or macro on that button. You may place a stance-switch
-macro for Overpower on the selected button while in Berserker Stance. The glow
+cast, or rewrite the spell or macro on that button.
+
+The dropdowns call the main bar Action bar 1, the bottom bars Action bars 2 and 3,
+the right and left bars Action bars 4 and 5, and the extra bars Action bars 6–8.
+The numbering changes only the labels; existing selections keep their buttons.
+
+You may place a stance-switch macro for Overpower on the selected button while
+in Berserker Stance. The glow
 prompts you to press it; it does not switch stance or cast for you. Overpower has
 independent Blizzard-native or custom color settings for Battle and Berserker
 Stance. Revenge, Execute, and Victory Rush each have one native or custom color
@@ -60,10 +66,12 @@ requires the current target to be confirmed in range. No target, an out-of-range
 target, or an unreadable range result leaves it dark. In combat, Execute ignores
 the range result and uses its existing opportunity signal; that client signal
 may still depend on the target.
-Victory Rush glows in any stance only during combat, when a learned rank is
+Victory Rush glows in any stance when a learned rank is
 reported usable and its own cooldown is ready. Insufficient power does not count
-as usable for Victory Rush. The global cooldown is ignored, and there is no
-separate addon range check; the client's usability signal may depend on the target.
+as usable for Victory Rush. **Only show in combat** is on by default; turn it off
+to allow that same glow outside combat. The global cooldown is ignored. There is
+no separate addon range check; the client's usability signal may depend on the
+target.
 An absent, hidden, or unselected button stays dark. Battle Shout remains combat only.
 
 When Battle Shout is due, the movable screen icon glows in combat, whether or not
@@ -212,11 +220,14 @@ These checks remain required; no WoW Forever client was available for local test
     and re-enable it from settings and check that the Battle Shout icon keeps its
     own size and position. Open the world map over the stance icon; the map
     should cover it until you close the map.
-12. Select a separate Victory Rush button in `/waf config`. Verify it stays dark
-    outside combat in all three stances. After a qualifying kill, enter combat
-    and confirm it glows when the client reports it usable and its own cooldown
-    is ready. Trigger another spell's global cooldown and confirm the glow stays
-    on. Use Victory Rush and confirm its own cooldown clears the glow. Switch
+12. Select a separate Victory Rush button in `/waf config`. With **Only show in
+    combat** on, verify it stays dark outside combat in all three stances. While
+    in combat, trigger a qualifying kill and confirm it glows when the client
+    reports it usable and its own cooldown is ready. Trigger another spell's
+    global cooldown and confirm the glow stays
+    on. Use Victory Rush and confirm its own cooldown clears the glow. Turn the
+    combat setting off and confirm a usable, ready Victory Rush can glow outside
+    combat, then turn it on and confirm the glow clears there. Switch
     stances, then disable and re-enable the feature; check the native and custom
     colors, saved button choice, and `/waf` diagnostic line.
 
@@ -241,7 +252,7 @@ lua tests/reactive_spells.lua
 lua tests/reactive_feature.lua
 python3 tests/package.py
 python3 scripts/package.py
-python3 -m zipfile -l dist/WarriorAssistForever-0.6.0.zip
+python3 -m zipfile -l dist/WarriorAssistForever-0.6.1.zip
 ```
 
 The integration check loads the actual bundled LibStub and LibCustomGlow with WoW

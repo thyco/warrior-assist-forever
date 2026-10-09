@@ -55,7 +55,7 @@ do
         "executeEnabled", "executeBar", "executeButton",
         "executeNativeColor", "executeGlowColor",
         "victoryRushEnabled", "victoryRushBar", "victoryRushButton",
-        "victoryRushNativeColor", "victoryRushGlowColor" }
+        "victoryRushNativeColor", "victoryRushGlowColor", "victoryRushCombatOnly" }
 
     for _, key in ipairs(keys) do
         assert(world.settings["WarriorAssistForever_" .. key], key .. " setting missing")
@@ -66,6 +66,7 @@ do
     H.equal(world.settings.WarriorAssistForever_revengeEnabled:GetValue(), true)
     H.equal(world.settings.WarriorAssistForever_executeEnabled:GetValue(), true)
     H.equal(world.settings.WarriorAssistForever_victoryRushEnabled:GetValue(), true)
+    H.equal(world.settings.WarriorAssistForever_victoryRushCombatOnly:GetValue(), true)
     H.equal(world.settings.WarriorAssistForever_overpowerBar:GetValue(), 0)
     H.equal(world.settings.WarriorAssistForever_revengeBar:GetValue(), 0)
     H.equal(world.settings.WarriorAssistForever_executeBar:GetValue(), 0)
@@ -89,6 +90,7 @@ do
     world.settings.WarriorAssistForever_victoryRushBar:SetValue(7)
     world.settings.WarriorAssistForever_victoryRushButton:SetValue(9)
     world.settings.WarriorAssistForever_victoryRushNativeColor:SetValue(false)
+    world.settings.WarriorAssistForever_victoryRushCombatOnly:SetValue(false)
 
     H.equal(world.env.WarriorAssistForeverDB.overpowerBar, 3)
     H.equal(world.env.WarriorAssistForeverDB.overpowerButton, 4)
@@ -102,12 +104,14 @@ do
     H.equal(world.env.WarriorAssistForeverDB.victoryRushBar, 7)
     H.equal(world.env.WarriorAssistForeverDB.victoryRushButton, 9)
     H.equal(world.env.WarriorAssistForeverDB.victoryRushNativeColor, false)
-    H.equal(addon.SettingsPanel.controls.revengeBar.text, "Left bar (second right bar)")
+    H.equal(world.env.WarriorAssistForeverDB.victoryRushCombatOnly, false)
+    H.equal(addon.SettingsPanel.controls.revengeBar.text, "Action bar 5")
     H.equal(addon.SettingsPanel.controls.overpowerBattleNativeColor.checked, true)
     H.equal(addon.SettingsPanel.controls.overpowerBerserkerNativeColor.checked, true)
     H.equal(addon.SettingsPanel.controls.revengeNativeColor.checked, true)
     H.equal(addon.SettingsPanel.controls.executeNativeColor.checked, false)
     H.equal(addon.SettingsPanel.controls.victoryRushNativeColor.checked, false)
+    H.equal(addon.SettingsPanel.controls.victoryRushCombatOnly.checked, false)
 end
 
 -- The stance color picker persists a selection and Cancel restores it.
@@ -252,7 +256,7 @@ do
 
     world.env.SlashCmdList.WARRIORASSISTFOREVER("")
     local result = table.concat(world.printed, "\n")
-    assert(result:find("Warrior Assist Forever 0.6.0 / client 16001 / Warrior active", 1, true))
+    assert(result:find("Warrior Assist Forever 0.6.1 / client 16001 / Warrior active", 1, true))
     assert(result:find("Enabled: true / lead: 10s", 1, true))
     assert(result:find("Battle Shout: unknown / none / due in unknown", 1, true))
     assert(result:find("Reminder: none", 1, true))

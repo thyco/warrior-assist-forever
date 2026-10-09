@@ -9,11 +9,13 @@ local prefixes = {
 }
 
 function Buttons.Bars()
-    return {
-        "Main bar", "Bottom left bar", "Bottom right bar",
-        "Right bar", "Left bar (second right bar)", "Action bar 6",
-        "Action bar 7", "Action bar 8",
-    }
+    local labels = {}
+
+    for index = 1, #prefixes do
+        labels[index] = "Action bar " .. index
+    end
+
+    return labels
 end
 
 function Buttons.Selected(bar, index)

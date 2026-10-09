@@ -136,6 +136,51 @@ do
     H.equal(world.glowActive[world.victoryRushButton], false, "disabling Victory Rush keeps it dark")
 end
 
+-- The combat-only setting applies immediately without changing usability or cooldown rules.
+do
+    local world, addon = setupVictoryRush()
+
+    addon.Config.Set("victoryRushCombatOnly", false)
+    H.equal(world.glowActive[world.victoryRushButton], true,
+        "disabling the combat restriction permits Victory Rush outside combat")
+
+    addon.Config.Set("victoryRushCombatOnly", true)
+    H.equal(world.glowActive[world.victoryRushButton], false,
+        "enabling combat-only mode immediately clears an out-of-combat glow")
+
+    addon.Config.Set("victoryRushCombatOnly", false)
+    H.equal(world.glowActive[world.victoryRushButton], true,
+        "turning the restriction off restores an eligible glow")
+
+    world.usable[402927] = false
+    reactiveEvent(world, "SPELL_UPDATE_USABLE")
+    H.equal(world.glowActive[world.victoryRushButton], false,
+        "combat setting does not bypass usability")
+
+    world.usable[402927] = true
+    world.cooldowns[402927] = { startTime = 100, duration = 30,
+        isActive = true, isEnabled = true }
+    reactiveEvent(world, "SPELL_UPDATE_COOLDOWN")
+    H.equal(world.glowActive[world.victoryRushButton], false,
+        "combat setting does not bypass own cooldown")
+
+    world.cooldowns[402927] = { startTime = 0, duration = 0,
+        isActive = false, isEnabled = true }
+    reactiveEvent(world, "SPELL_UPDATE_COOLDOWN")
+    H.equal(world.glowActive[world.victoryRushButton], true)
+
+    world.combat = true
+    reactiveEvent(world, "PLAYER_REGEN_DISABLED")
+    addon.Config.Set("victoryRushCombatOnly", true)
+    H.equal(world.glowActive[world.victoryRushButton], true,
+        "enabling combat-only mode keeps an active combat glow")
+
+    world.combat = false
+    reactiveEvent(world, "PLAYER_REGEN_ENABLED")
+    H.equal(world.glowActive[world.victoryRushButton], false,
+        "default combat-only mode clears glow on leaving combat")
+end
+
 -- Execute has a separate selected button and uses the same opportunity in both permitted stances.
 do
     local world, addon = setupExecute()
