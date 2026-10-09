@@ -36,7 +36,7 @@ function panel:Initialize()
     scroll:SetPoint("TOPLEFT", canvas, "TOPLEFT", 0, -8)
     scroll:SetPoint("BOTTOMRIGHT", canvas, "BOTTOMRIGHT", -28, 8)
     local content = CreateFrame("Frame", nil, scroll)
-    content:SetSize(580, 1710)
+    content:SetSize(580, 2040)
     scroll:SetScrollChild(content)
     scroll:SetScript("OnSizeChanged", function(_, width)
         content:SetWidth(math.max(1, width))
@@ -101,6 +101,8 @@ function panel:Initialize()
             description = "Defensive Stance usability" },
         { name = "Execute", key = "execute", y = -1126, height = 300,
             description = "Battle or Berserker Stance usability" },
+        { name = "Victory Rush", key = "victoryRush", y = -1442, height = 300,
+            description = "In combat: usable and off its own cooldown" },
     }
 
     for _, ability in ipairs(abilities) do
@@ -155,7 +157,7 @@ function panel:Initialize()
     end
 
     local stance = widgets.Section(content, "Current Stance",
-        "Always-visible icon for Battle, Defensive, or Berserker Stance", -1442, 235)
+        "Always-visible icon for Battle, Defensive, or Berserker Stance", -1758, 235)
     self.sections[#self.sections + 1] = stance
 
     local stanceEnabled = registerSetting("stanceIconEnabled", "Show current stance icon", Settings.VarType.Boolean)

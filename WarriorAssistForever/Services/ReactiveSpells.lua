@@ -1,8 +1,10 @@
 local _, addon = ...
-local ReactiveSpells = { ids = { overpower = {}, revenge = {}, execute = {} }, gcdOnly = {} }
+local ReactiveSpells = { ids = { overpower = {}, revenge = {}, execute = {}, victoryRush = {} },
+    gcdOnly = {} }
 addon.ReactiveSpells = ReactiveSpells
 
-local seeds = { overpower = 7384, revenge = 6572, execute = 5308 }
+local seeds = { overpower = 7384, revenge = 6572, execute = 5308,
+    victoryRush = 402927 }
 local gcdEvidenceSeconds = 1.6
 
 local function read(api, ...)
@@ -50,8 +52,8 @@ end
 
 function ReactiveSpells.Rebuild()
     local names = {}
-    local seen = { overpower = {}, revenge = {}, execute = {} }
-    ReactiveSpells.ids = { overpower = {}, revenge = {}, execute = {} }
+    local seen = { overpower = {}, revenge = {}, execute = {}, victoryRush = {} }
+    ReactiveSpells.ids = { overpower = {}, revenge = {}, execute = {}, victoryRush = {} }
     ReactiveSpells.gcdOnly = {}
 
     for kind, seed in pairs(seeds) do
@@ -228,7 +230,8 @@ function ReactiveSpells.Evaluate(kind, mode)
         local signal = signalFor(id, kind, mode)
         local cooldown = kind == "execute" and "n/a" or cooldownFor(id)
         local range = kind == "execute" and (inCombat and "skipped" or rangeFor(id)) or "n/a"
-        local opportunity = signal == mode or (mode == "usable" and signal == "low-rage")
+        local opportunity = signal == mode or (kind ~= "victoryRush"
+            and mode == "usable" and signal == "low-rage")
         local cooldownAllows = kind == "overpower" or kind == "execute" or cooldown == "ready"
         local rangeAllows = kind ~= "execute" or range == "skipped" or range == "in"
 

@@ -9,7 +9,8 @@ local function setup(learned)
     world.overlay = {}
     world.cooldowns = {}
     world.names = { [7384] = "Frappe dominante", [6572] = "Revanche",
-        [11584] = "Frappe dominante", [5308] = "Exécution", [20658] = "Exécution" }
+        [11584] = "Frappe dominante", [5308] = "Exécution", [20658] = "Exécution",
+        [402927] = "Ruée victorieuse" }
     world.time = 100
     world.env.Enum = {
         SpellBookSpellBank = { Player = 0 },
@@ -121,6 +122,60 @@ unlearnedExecuteWorld.usable[5308] = true
 status = unlearnedExecute.Evaluate("execute", "usable")
 H.equal(status.learned, false)
 H.equal(status.ready, false, "unlearned Execute cannot glow")
+
+local victoryWorld, victorySpells = setup({ 402927 })
+victoryWorld.usable[402927] = true
+victoryWorld.cooldowns[402927] = { startTime = 0, duration = 0,
+    isActive = false, isEnabled = true }
+
+status = victorySpells.Evaluate("victoryRush", "usable")
+H.equal(status.learned, true, "localized learned Victory Rush is found")
+H.equal(status.id, 402927)
+H.equal(status.ready, true, "usable Victory Rush with no own cooldown is ready")
+H.equal(status.cooldown, "ready")
+
+victoryWorld.cooldowns[402927] = { startTime = 95, duration = 30,
+    isActive = true, isEnabled = true }
+status = victorySpells.Evaluate("victoryRush", "usable")
+H.equal(status.ready, false, "Victory Rush own cooldown blocks its opportunity")
+H.equal(status.cooldown, "blocked")
+
+victoryWorld.cooldowns[402927] = { startTime = 0, duration = 0,
+    isActive = false, isEnabled = true }
+victoryWorld.usable[402927] = false
+victoryWorld.insufficientPower[402927] = true
+status = victorySpells.Evaluate("victoryRush", "usable")
+H.equal(status.ready, false, "Victory Rush requires true usability, even with low power")
+H.equal(status.signal, "low-rage")
+
+victoryWorld.usable[402927] = true
+victoryWorld.insufficientPower[402927] = false
+victoryWorld.cooldowns[402927] = { startTime = 100.02, duration = 1.5,
+    isActive = true, isEnabled = true }
+victoryWorld.env.C_Spell.GetSpellCooldownDuration = function(id, ignoreGCD)
+    H.equal(id, 402927)
+    H.equal(ignoreGCD, true, "Victory Rush own cooldown query excludes GCD")
+
+    return {
+        HasSecretValues = function() return false end,
+        IsZero = function() return true end,
+    }
+end
+
+status = victorySpells.Evaluate("victoryRush", "usable")
+H.equal(status.ready, true, "a global cooldown does not hide usable Victory Rush")
+
+victoryWorld.env.C_Spell.GetSpellCooldownDuration = function()
+    return { HasSecretValues = function() return true end }
+end
+status = victorySpells.Evaluate("victoryRush", "usable")
+H.equal(status.ready, false, "unreadable own cooldown cannot enable Victory Rush")
+H.equal(status.cooldown, "unknown")
+
+local unlearnedVictoryWorld, unlearnedVictory = setup({ 6572 })
+unlearnedVictoryWorld.usable[402927] = true
+status = unlearnedVictory.Evaluate("victoryRush", "usable")
+H.equal(status.ready, false, "unlearned Victory Rush cannot glow")
 
 local rageWorld, rageSpells = setup()
 rageWorld.usable[7384] = false

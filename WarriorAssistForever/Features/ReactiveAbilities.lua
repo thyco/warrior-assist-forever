@@ -3,6 +3,7 @@ local ReactiveAbilities = { running = false, elapsed = 0 }
 addon.ReactiveAbilities = ReactiveAbilities
 
 local executeStyle = { native = "executeNativeColor", custom = "executeGlowColor" }
+local victoryRushStyle = { native = "victoryRushNativeColor", custom = "victoryRushGlowColor" }
 local definitions = {
     overpower = { owner = "overpower", enabled = "overpowerEnabled",
         bar = "overpowerBar", button = "overpowerButton",
@@ -21,13 +22,18 @@ local definitions = {
         bar = "executeBar", button = "executeButton",
         modes = { battle = "usable", berserker = "usable" },
         colors = { battle = executeStyle, berserker = executeStyle } },
+    victoryRush = { owner = "victoryRush", enabled = "victoryRushEnabled",
+        bar = "victoryRushBar", button = "victoryRushButton", combatOnly = true,
+        modes = { battle = "usable", defensive = "usable", berserker = "usable" },
+        colors = { battle = victoryRushStyle, defensive = victoryRushStyle,
+            berserker = victoryRushStyle } },
 }
-local order = { "overpower", "revenge", "execute" }
+local order = { "overpower", "revenge", "execute", "victoryRush" }
 local events = {
     "UPDATE_SHAPESHIFT_FORM", "SPELL_UPDATE_USABLE", "SPELL_UPDATE_COOLDOWN",
     "SPELL_ACTIVATION_OVERLAY_GLOW_SHOW", "SPELL_ACTIVATION_OVERLAY_GLOW_HIDE",
     "SPELLS_CHANGED", "PLAYER_TALENT_UPDATE", "SPELL_DATA_LOAD_RESULT",
-    "PLAYER_ENTERING_WORLD", "PLAYER_LEAVING_WORLD", "PLAYER_REGEN_ENABLED",
+    "PLAYER_ENTERING_WORLD", "PLAYER_LEAVING_WORLD", "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED",
     "ACTIONBAR_PAGE_CHANGED", "ACTIONBAR_SLOT_CHANGED", "ACTIONBAR_UPDATE_STATE",
 }
 local rebuildEvents = {
@@ -144,7 +150,8 @@ function ReactiveAbilities:Refresh()
 
         local status = emptyStatus()
         local mode = definition.modes[stance]
-        if addon.Config.Get(definition.enabled) and mode and shown then
+        if addon.Config.Get(definition.enabled) and mode and shown
+            and (not definition.combatOnly or addon.Client.InCombat()) then
             local result = addon.ReactiveSpells.Evaluate(kind, mode)
             status.ready = result.ready
             status.signal = result.signal
@@ -193,10 +200,10 @@ function ReactiveAbilities:Stop()
 
     self.buttons = {}
     self.status = { stance = "unknown", overpower = emptyStatus(),
-        revenge = emptyStatus(), execute = emptyStatus() }
+        revenge = emptyStatus(), execute = emptyStatus(), victoryRush = emptyStatus() }
 end
 
 function ReactiveAbilities:Status()
     return self.status or { stance = "unknown", overpower = emptyStatus(),
-        revenge = emptyStatus(), execute = emptyStatus() }
+        revenge = emptyStatus(), execute = emptyStatus(), victoryRush = emptyStatus() }
 end

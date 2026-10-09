@@ -26,15 +26,16 @@ local function setup(options)
     }
     world.env.C_SpellBook = {
         GetNumSpellBookSkillLines = function() return 1 end,
-        GetSpellBookSkillLineInfo = function() return { itemIndexOffset = 0, numSpellBookItems = 3 } end,
+        GetSpellBookSkillLineInfo = function() return { itemIndexOffset = 0, numSpellBookItems = 4 } end,
         GetSpellBookItemInfo = function(index)
             return { itemType = 1, isPassive = false, isOffSpec = false,
-                spellID = index == 1 and 7384 or (index == 2 and 6572 or 5308) }
+                spellID = index == 1 and 7384 or (index == 2 and 6572 or
+                    (index == 3 and 5308 or 402927)) }
         end,
     }
     world.env.C_Spell.GetSpellInfo = function(id)
         local names = { [7384] = "Overpower", [6572] = "Revenge",
-            [5308] = "Execute", [6673] = "Battle Shout" }
+            [5308] = "Execute", [402927] = "Victory Rush", [6673] = "Battle Shout" }
         return names[id] and { name = names[id] }
     end
     world.env.C_Spell.IsSpellUsable = function(id)
@@ -68,10 +69,71 @@ local function setupExecute()
     end)
 end
 
+local function setupVictoryRush()
+    return setup(function(world)
+        world.env.WarriorAssistForeverDB.victoryRushBar = 1
+        world.env.WarriorAssistForeverDB.victoryRushButton = 4
+        world.victoryRushButton = world:newFrame()
+        world.env.ActionButton4 = world.victoryRushButton
+        world.usable[402927] = true
+        world.cooldowns[402927] = { startTime = 0, duration = 0,
+            isActive = false, isEnabled = true }
+    end)
+end
+
 local function reactiveEvent(world, event, ...)
     local frame = world.addon.ReactiveAbilities.frame
     assert(frame.events[event] == true, "event must be registered: " .. event)
     frame.scripts.OnEvent(frame, event, ...)
+end
+
+-- Victory Rush glows only in combat with true usability and a ready own cooldown.
+do
+    local world, addon = setupVictoryRush()
+
+    H.equal(world.glowActive[world.victoryRushButton], false, "Victory Rush stays dark outside combat")
+
+    world.combat = true
+    reactiveEvent(world, "PLAYER_REGEN_DISABLED")
+    H.equal(world.glowActive[world.victoryRushButton], true, "usable Victory Rush glows in Battle Stance")
+    H.equal(world.glowActive[world.overpowerButton], true, "Victory Rush keeps its own button")
+
+    world.stanceID = 18
+    reactiveEvent(world, "UPDATE_SHAPESHIFT_FORM")
+    H.equal(world.glowActive[world.victoryRushButton], true, "Victory Rush glows in Defensive Stance")
+
+    world.stanceID = 19
+    reactiveEvent(world, "UPDATE_SHAPESHIFT_FORM")
+    H.equal(world.glowActive[world.victoryRushButton], true, "Victory Rush glows in Berserker Stance")
+
+    world.usable[402927] = false
+    world.insufficientPower[402927] = true
+    reactiveEvent(world, "SPELL_UPDATE_USABLE")
+    H.equal(world.glowActive[world.victoryRushButton], false, "low power is not a Victory Rush opportunity")
+
+    world.usable[402927] = true
+    world.insufficientPower[402927] = false
+    world.cooldowns[402927] = { startTime = 100, duration = 30,
+        isActive = true, isEnabled = true }
+    reactiveEvent(world, "SPELL_UPDATE_COOLDOWN")
+    H.equal(world.glowActive[world.victoryRushButton], false, "own cooldown blocks Victory Rush")
+
+    world.cooldowns[402927] = { startTime = 100, duration = 1.5,
+        isActive = true, isEnabled = true }
+    world.cooldowns[61304] = { startTime = 100, duration = 1.5, isActive = true }
+    reactiveEvent(world, "SPELL_UPDATE_COOLDOWN")
+    H.equal(world.glowActive[world.victoryRushButton], true, "GCD alone does not hide Victory Rush")
+
+    world.env.SlashCmdList.WARRIORASSISTFOREVER("")
+    local diagnostics = table.concat(world.printed, "\n")
+    assert(diagnostics:find("Victory Rush: learned / ready / usable / ready / bar 1 button 4 / glow active", 1, true))
+
+    world.combat = false
+    reactiveEvent(world, "PLAYER_REGEN_ENABLED")
+    H.equal(world.glowActive[world.victoryRushButton], false, "leaving combat clears Victory Rush")
+
+    addon.Config.Set("victoryRushEnabled", false)
+    H.equal(world.glowActive[world.victoryRushButton], false, "disabling Victory Rush keeps it dark")
 end
 
 -- Execute has a separate selected button and uses the same opportunity in both permitted stances.
@@ -509,6 +571,27 @@ do
 
     addon.Config.Set("executeNativeColor", true)
     H.equal(world.glows[entry.frame].color, nil, "Execute restores native glow")
+end
+
+-- Victory Rush uses one configurable glow color in every stance.
+do
+    local world, addon = setupVictoryRush()
+    world.combat = true
+    reactiveEvent(world, "PLAYER_REGEN_DISABLED")
+
+    local entry = addon.Glow.Prepare(world.victoryRushButton)
+    H.equal(world.glows[entry.frame].color, nil, "Victory Rush defaults to native glow")
+
+    addon.Config.Set("victoryRushNativeColor", false)
+    addon.Config.Set("victoryRushGlowColor", "ff0000ff")
+    H.equal(world.glows[entry.frame].color[3], 1, "Victory Rush uses its custom blue")
+
+    world.stanceID = 18
+    reactiveEvent(world, "UPDATE_SHAPESHIFT_FORM")
+    H.equal(world.glows[entry.frame].color[3], 1, "Defensive Stance keeps Victory Rush color")
+
+    addon.Config.Set("victoryRushNativeColor", true)
+    H.equal(world.glows[entry.frame].color, nil, "Victory Rush restores native glow")
 end
 
 print("reactive feature: PASS")

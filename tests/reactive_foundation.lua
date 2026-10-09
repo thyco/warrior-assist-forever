@@ -20,6 +20,11 @@ H.equal(addon.Config.Get("executeBar"), 0)
 H.equal(addon.Config.Get("executeButton"), 1)
 H.equal(addon.Config.Get("executeNativeColor"), true)
 H.equal(addon.Config.Get("executeGlowColor"), "ffffd24a")
+H.equal(addon.Config.Get("victoryRushEnabled"), true)
+H.equal(addon.Config.Get("victoryRushBar"), 0)
+H.equal(addon.Config.Get("victoryRushButton"), 1)
+H.equal(addon.Config.Get("victoryRushNativeColor"), true)
+H.equal(addon.Config.Get("victoryRushGlowColor"), "ffffd24a")
 H.equal(addon.Config.Get("battleShoutEnabled"), true)
 
 local saved = H.new()
@@ -35,6 +40,11 @@ saved.env.WarriorAssistForeverDB = {
     executeButton = 6,
     executeNativeColor = false,
     executeGlowColor = "ff112233",
+    victoryRushEnabled = false,
+    victoryRushBar = 4,
+    victoryRushButton = 8,
+    victoryRushNativeColor = false,
+    victoryRushGlowColor = "ff112233",
 }
 local savedAddon = load(saved)
 
@@ -51,6 +61,11 @@ H.equal(savedAddon.Config.Get("executeBar"), 2)
 H.equal(savedAddon.Config.Get("executeButton"), 6)
 H.equal(savedAddon.Config.Get("executeNativeColor"), false)
 H.equal(savedAddon.Config.Get("executeGlowColor"), "ff112233")
+H.equal(savedAddon.Config.Get("victoryRushEnabled"), false)
+H.equal(savedAddon.Config.Get("victoryRushBar"), 4)
+H.equal(savedAddon.Config.Get("victoryRushButton"), 8)
+H.equal(savedAddon.Config.Get("victoryRushNativeColor"), false)
+H.equal(savedAddon.Config.Get("victoryRushGlowColor"), "ff112233")
 
 local invalid = H.new()
 local secretBar = 5
@@ -65,6 +80,9 @@ invalid.env.WarriorAssistForeverDB = {
     executeBar = 9,
     executeButton = 0,
     executeGlowColor = "invalid",
+    victoryRushBar = 9,
+    victoryRushButton = 0,
+    victoryRushGlowColor = "invalid",
 }
 local invalidAddon = load(invalid)
 
@@ -77,10 +95,14 @@ H.equal(invalidAddon.Config.Get("revengeButton"), 1)
 H.equal(invalidAddon.Config.Get("executeBar"), 0)
 H.equal(invalidAddon.Config.Get("executeButton"), 1)
 H.equal(invalidAddon.Config.Get("executeGlowColor"), "ffffd24a")
+H.equal(invalidAddon.Config.Get("victoryRushBar"), 0)
+H.equal(invalidAddon.Config.Get("victoryRushButton"), 1)
+H.equal(invalidAddon.Config.Get("victoryRushGlowColor"), "ffffd24a")
 H.equal(pcall(invalidAddon.Config.Set, "overpowerBar", 9), false)
 H.equal(pcall(invalidAddon.Config.Set, "revengeButton", 13), false)
 H.equal(pcall(invalidAddon.Config.Set, "overpowerButton", secretButton), false)
 H.equal(pcall(invalidAddon.Config.Set, "executeButton", 13), false)
+H.equal(pcall(invalidAddon.Config.Set, "victoryRushButton", 13), false)
 
 local positions = {
     { "ActionButton", "Main bar" },

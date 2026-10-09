@@ -7,7 +7,7 @@ The addon does not cast spells or change bindings.
 
 ## Installation
 
-Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.5.1.zip`.
+Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.6.0.zip`.
 Extract the ZIP into the client's `Interface/AddOns` directory so the manifest is
 `Interface/AddOns/WarriorAssistForever/WarriorAssistForever.toc`. Enable Warrior
 Assist Forever in the AddOns list and log in or reload. LibStub and LibCustomGlow,
@@ -34,7 +34,7 @@ position are saved across reloads. It accepts mouse input only while you are
 moving it from settings. During normal play, the world map covers the stance
 icon where they overlap.
 
-Overpower, Revenge, and Execute each have their own enable toggle, action bar,
+Overpower, Revenge, Execute, and Victory Rush each have their own enable toggle, action bar,
 and button selection. All are enabled by default, but their bars start at
 **Not selected**: choose a supported default bar and button 1–12 for each glow. The choices are
 independent, saved across reloads, and apply immediately. They identify a physical
@@ -43,8 +43,8 @@ cast, or rewrite the spell or macro on that button. You may place a stance-switc
 macro for Overpower on the selected button while in Berserker Stance. The glow
 prompts you to press it; it does not switch stance or cast for you. Overpower has
 independent Blizzard-native or custom color settings for Battle and Berserker
-Stance. Revenge and Execute each have one native or custom color setting; Execute
-uses the same color in both supported stances. Reactive glows use Blizzard's
+Stance. Revenge, Execute, and Victory Rush each have one native or custom color
+setting across their supported stances. Reactive glows use Blizzard's
 native appearance by default.
 
 In Battle Stance, a learned Overpower must be reported usable or blocked only by
@@ -60,6 +60,10 @@ requires the current target to be confirmed in range. No target, an out-of-range
 target, or an unreadable range result leaves it dark. In combat, Execute ignores
 the range result and uses its existing opportunity signal; that client signal
 may still depend on the target.
+Victory Rush glows in any stance only during combat, when a learned rank is
+reported usable and its own cooldown is ready. Insufficient power does not count
+as usable for Victory Rush. The global cooldown is ignored, and there is no
+separate addon range check; the client's usability signal may depend on the target.
 An absent, hidden, or unselected button stays dark. Battle Shout remains combat only.
 
 When Battle Shout is due, the movable screen icon glows in combat, whether or not
@@ -103,18 +107,18 @@ Reactive glows require readable learned ranks and client opportunity evidence.
 Unknown, secret, malformed, or failing stance, overlay, or usability data leaves
 the affected glow dark. Overpower does not require cooldown evidence, though
 `/waf` still reports its cooldown as `ready`, `blocked`, or `unknown`. Revenge
-continues to require a ready own cooldown. Execute has no own cooldown check;
+and Victory Rush require a ready own cooldown. Execute has no own cooldown check;
 `/waf` reports `n/a` for it and reports Execute range as `in`, `out`,
 `unknown`, or `skipped` in combat. Following Hunter's Mongoose Bite cooldown logic
-for Revenge, the addon captures `isOnGCD` on
+for Revenge and Victory Rush, the addon captures `isOnGCD` on
 `SPELL_UPDATE_COOLDOWN` without requiring a separate global cooldown query.
-A readable own cooldown blocks Revenge's glow. When its cooldown timing is
+A readable own cooldown blocks either glow. When cooldown timing is
 restricted, the event flag keeps it ready for up to 1.6 seconds; a later
 cooldown event refreshes or clears it. Otherwise, the addon uses the client's
 cooldown duration with GCD excluded when available, then falls back to regular
 cooldown timing. A native inactive cooldown stays ready even if the separate
 duration object is restricted. An unreadable own cooldown without event evidence
-leaves Revenge dark. `/waf` reports `low-rage` when the client identifies
+leaves Revenge or Victory Rush dark. `/waf` reports `low-rage` when the client identifies
 insufficient power as the reason for an otherwise active opportunity.
 
 A newly available button that cannot be
@@ -130,8 +134,8 @@ in game; the addon does not invent a dodge/block/parry timer when it is absent.
 Use `/waf` for addon/client version, Warrior activation, enabled state, lead time,
 aura state (`present`, `missing`, `unknown`), timing quality (`exact`, `estimated`,
 `none`), remaining time when known, and selected reminder (`none`, `icon-late`,
-`icon-missing`). It also reports stance, whether an Overpower, Revenge, or
-Execute rank is known, ready state, usability or overlay evidence, cooldown,
+`icon-missing`). It also reports stance, whether an Overpower, Revenge, Execute,
+or Victory Rush rank is known, ready state, usability or overlay evidence, cooldown,
 Execute range, selected position, and glow activity. Unknown or restricted values use bounded
 labels; raw spell IDs and restricted API results are not printed.
 
@@ -208,6 +212,13 @@ These checks remain required; no WoW Forever client was available for local test
     and re-enable it from settings and check that the Battle Shout icon keeps its
     own size and position. Open the world map over the stance icon; the map
     should cover it until you close the map.
+12. Select a separate Victory Rush button in `/waf config`. Verify it stays dark
+    outside combat in all three stances. After a qualifying kill, enter combat
+    and confirm it glows when the client reports it usable and its own cooldown
+    is ready. Trigger another spell's global cooldown and confirm the glow stays
+    on. Use Victory Rush and confirm its own cooldown clears the glow. Switch
+    stances, then disable and re-enable the feature; check the native and custom
+    colors, saved button choice, and `/waf` diagnostic line.
 
 If aura information differs in the real client, report the `/waf` status before and
 after the event, client version, combat state, whether the caster was another
@@ -230,7 +241,7 @@ lua tests/reactive_spells.lua
 lua tests/reactive_feature.lua
 python3 tests/package.py
 python3 scripts/package.py
-python3 -m zipfile -l dist/WarriorAssistForever-0.5.1.zip
+python3 -m zipfile -l dist/WarriorAssistForever-0.6.0.zip
 ```
 
 The integration check loads the actual bundled LibStub and LibCustomGlow with WoW
