@@ -42,13 +42,22 @@ function H.new()
             return frame(self)
         end
         function value:CreateTexture()
-            return {
-                SetAllPoints = function() end,
-                SetTexture = function(texture, path) texture.path = path end,
-                SetAlpha = function(texture, alpha) texture.alpha = alpha end,
-                SetPoint = function() end,
-                SetColorTexture = function(texture, ...) texture.color = { ... } end,
-            }
+            local texture = { parent = self, visible = true }
+
+            function texture:SetAllPoints(target) self.points = target end
+            function texture:SetTexture(path) self.path = path end
+            function texture:SetAlpha(alpha) self.alpha = alpha end
+            function texture:SetPoint(...) self.point = { ... } end
+            function texture:ClearAllPoints() self.point = nil end
+            function texture:SetColorTexture(...) self.color = { ... } end
+            function texture:SetVertexColor(...) self.vertexColor = { ... } end
+            function texture:SetSize(width, height) self.width, self.height = width, height end
+            function texture:SetTexCoord(...) self.texCoords = { ... } end
+            function texture:Show() self.visible = true end
+            function texture:Hide() self.visible = false end
+            function texture:IsShown() return self.visible end
+
+            return texture
         end
 
         function value:SetAllPoints(target)

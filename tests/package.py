@@ -36,6 +36,17 @@ with tempfile.TemporaryDirectory() as temporary:
         assert "WarriorAssistForever/Libs/LibCustomGlow-1.0/DKForce-LICENSE" in names
         assert "WarriorAssistForever/Libs/README.md" in names
         assert "WarriorAssistForever/Media/Warrior.tga" in names
+        corner_name = "WarriorAssistForever/Media/ShieldCorner.tga"
+        assert corner_name in names
+        corner = archive.read(corner_name)
+        assert corner[2] == 2, "shield corner uses uncompressed true-color TGA"
+        assert int.from_bytes(corner[12:14], "little") == 64
+        assert int.from_bytes(corner[14:16], "little") == 64
+        assert corner[16] == 32 and corner[17] == 0x28
+        assert len(corner) == 18 + 64 * 64 * 4
+        assert corner[21] == 255 and corner[-1] == 0, (
+            "triangle has opaque top-left and transparent bottom-right"
+        )
         for entry in ("Features/ReactiveAbilities.lua", "Services/Buttons.lua",
                       "Services/Stance.lua", "Services/ReactiveSpells.lua"):
             assert "WarriorAssistForever/" + entry in names

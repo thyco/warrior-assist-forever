@@ -36,7 +36,7 @@ function panel:Initialize()
     scroll:SetPoint("TOPLEFT", canvas, "TOPLEFT", 0, -8)
     scroll:SetPoint("BOTTOMRIGHT", canvas, "BOTTOMRIGHT", -28, 8)
     local content = CreateFrame("Frame", nil, scroll)
-    content:SetSize(580, 2390)
+    content:SetSize(580, 2530)
     scroll:SetScrollChild(content)
     scroll:SetScript("OnSizeChanged", function(_, width)
         content:SetWidth(math.max(1, width))
@@ -166,7 +166,7 @@ function panel:Initialize()
     end
 
     local stance = widgets.Section(content, "Current Stance",
-        "Always-visible icon for Battle, Defensive, or Berserker Stance", -2120, 235)
+        "Always-visible icon for Battle, Defensive, or Berserker Stance", -2120, 375)
     self.sections[#self.sections + 1] = stance
 
     local stanceEnabled = registerSetting("stanceIconEnabled", "Show current stance icon", Settings.VarType.Boolean)
@@ -177,8 +177,29 @@ function panel:Initialize()
     self.controls.stanceIconSize = widgets.Dropdown(stance,
         "Stance icon size", -116, stanceSize, sizes)
 
+    local cornerEnabled = registerSetting("shieldCornerEnabled",
+        "Show shield corner when equipped", Settings.VarType.Boolean)
+    self.controls.shieldCornerEnabled = widgets.Checkbox(stance,
+        "Show shield corner when equipped", -166, cornerEnabled)
+
+    local cornerColor = registerSetting("shieldCornerColor",
+        "Shield corner color", Settings.VarType.String)
+    self.controls.shieldCornerColor = widgets.Color(stance,
+        "Shield corner color", -210, cornerColor)
+
+    local cornerPositions = {
+        { value = "TOPLEFT", label = "Top left" },
+        { value = "TOPRIGHT", label = "Top right" },
+        { value = "BOTTOMLEFT", label = "Bottom left" },
+        { value = "BOTTOMRIGHT", label = "Bottom right" },
+    }
+    local cornerPosition = registerSetting("shieldCornerPosition",
+        "Shield corner position", Settings.VarType.String)
+    self.controls.shieldCornerPosition = widgets.Dropdown(stance,
+        "Shield corner position", -260, cornerPosition, cornerPositions)
+
     local stanceMove = CreateFrame("Button", nil, stance, "UIPanelButtonTemplate")
-    stanceMove:SetPoint("TOPLEFT", stance, "TOPLEFT", 20, -170)
+    stanceMove:SetPoint("TOPLEFT", stance, "TOPLEFT", 20, -320)
     stanceMove:SetSize(160, 28)
     stanceMove:SetText("Move stance icon")
     stanceMove:SetScript("OnClick", function()

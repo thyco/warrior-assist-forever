@@ -7,7 +7,7 @@ The addon does not cast spells or change bindings.
 
 ## Installation
 
-Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.7.0.zip`.
+Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.8.0.zip`.
 Extract the ZIP into the client's `Interface/AddOns` directory so the manifest is
 `Interface/AddOns/WarriorAssistForever/WarriorAssistForever.toc`. Enable Warrior
 Assist Forever in the AddOns list and log in or reload. LibStub and LibCustomGlow,
@@ -33,6 +33,13 @@ separate from the Battle Shout reminder. Move it outside combat; its size and
 position are saved across reloads. It accepts mouse input only while you are
 moving it from settings. During normal play, the world map covers the stance
 icon where they overlap.
+
+When a shield is confirmed equipped, a small filled corner appears on the
+stance icon, including outside combat and without a target. It is purple at
+the top left by default. The **Current Stance** settings let you turn the
+corner off, pick its color, and place it at any of the four corners. Its size
+is one quarter of the chosen stance icon size, so it scales with that icon.
+No corner appears when a shield is absent or its equipment data is unreadable.
 
 Overpower, Revenge, Execute, Victory Rush, and Shield Block each have their own enable toggle, action bar,
 and button selection. All are enabled by default, but their bars start at
@@ -225,7 +232,11 @@ These checks remain required; no WoW Forever client was available for local test
     combat; the artwork should update and the icon should stay visible. Disable
     and re-enable it from settings and check that the Battle Shout icon keeps its
     own size and position. Open the world map over the stance icon; the map
-    should cover it until you close the map.
+    should cover it until you close the map. Equip a shield and confirm the
+    purple corner appears; remove it and confirm the corner disappears. Change
+    the corner color and all four positions, resize the stance icon, then reload
+    and confirm those choices persist. The corner should also update while in
+    combat without changing stance.
 12. Select a separate Victory Rush button in `/waf config`. With **Only show in
     combat** on, verify it stays dark outside combat in all three stances. While
     in combat, trigger a qualifying kill and confirm it glows when the client
@@ -264,10 +275,12 @@ lua tests/reactive_spells.lua
 lua tests/reactive_feature.lua
 python3 tests/package.py
 python3 scripts/package.py
-python3 -m zipfile -l dist/WarriorAssistForever-0.7.0.zip
+python3 -m zipfile -l dist/WarriorAssistForever-0.8.0.zip
 ```
 
 The integration check loads the actual bundled LibStub and LibCustomGlow with WoW
 frame/animation doubles, then exercises the production glow and screen icon.
-Package checks verify the install root, unique entries, license files, exact source
-bytes, ZIP integrity, and rejection of missing or escaping manifest paths.
+Package checks verify the install root, unique entries, license files, the
+shield corner texture, exact source bytes, ZIP integrity, and rejection of
+missing or escaping manifest paths. The texture can be regenerated with
+`python3 scripts/generate_shield_corner.py`.

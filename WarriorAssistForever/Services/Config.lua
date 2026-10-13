@@ -15,6 +15,9 @@ local defaults = {
     stanceIconSize = 64,
     stanceIconX = 0,
     stanceIconY = -180,
+    shieldCornerEnabled = true,
+    shieldCornerColor = "ff9461df",
+    shieldCornerPosition = "TOPLEFT",
     overpowerEnabled = true,
     overpowerBar = 0,
     overpowerButton = 1,
@@ -54,6 +57,7 @@ local colorKeys = {
     executeGlowColor = true,
     victoryRushGlowColor = true,
     shieldBlockGlowColor = true,
+    shieldCornerColor = true,
 }
 
 local function validValue(key, value)
@@ -81,6 +85,11 @@ local function validValue(key, value)
 
     if key == "iconSize" or key == "stanceIconSize" then
         return value >= 16 and value <= 128 and value % 4 == 0
+    end
+
+    if key == "shieldCornerPosition" then
+        return value == "TOPLEFT" or value == "TOPRIGHT"
+            or value == "BOTTOMLEFT" or value == "BOTTOMRIGHT"
     end
 
     if colorKeys[key] then

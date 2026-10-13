@@ -4,6 +4,13 @@ addon.StanceIcon = Icon
 
 local stanceSpells = { battle = 2457, defensive = 71, berserker = 2458 }
 local unknownTexture = "Interface\\Icons\\INV_Misc_QuestionMark"
+local cornerTexture = "Interface\\AddOns\\WarriorAssistForever\\Media\\ShieldCorner.tga"
+local cornerCoordinates = {
+    TOPLEFT = { 0, 1, 0, 1 },
+    TOPRIGHT = { 1, 0, 0, 1 },
+    BOTTOMLEFT = { 0, 1, 1, 0 },
+    BOTTOMRIGHT = { 1, 0, 1, 0 },
+}
 
 local function position(frame)
     frame:ClearAllPoints()
@@ -28,6 +35,10 @@ function Icon:Initialize()
     self.texture = frame:CreateTexture(nil, "ARTWORK")
     self.texture:SetAllPoints(frame)
 
+    self.corner = frame:CreateTexture(nil, "OVERLAY")
+    self.corner:SetTexture(cornerTexture)
+    self.corner:Hide()
+
     frame:SetScript("OnDragStart", function(target)
         if self.preview and not addon.Client.InCombat() then
             target:StartMoving()
@@ -51,6 +62,7 @@ function Icon:Initialize()
     for _, event in ipairs({
         "UPDATE_SHAPESHIFT_FORM", "UPDATE_SHAPESHIFT_FORMS",
         "PLAYER_ENTERING_WORLD", "PLAYER_REGEN_DISABLED",
+        "PLAYER_EQUIPMENT_CHANGED",
     }) do
         frame:RegisterEvent(event)
     end
@@ -63,7 +75,6 @@ function Icon:Initialize()
     end)
 
     self:ApplySettings()
-    self:Refresh()
 end
 
 function Icon:ApplySettings()
@@ -75,10 +86,21 @@ function Icon:ApplySettings()
     self.frame:SetSize(size, size)
     position(self.frame)
 
+    local cornerSize = size / 4
+    local cornerPosition = addon.Config.Get("shieldCornerPosition")
+    local coordinates = cornerCoordinates[cornerPosition]
+    local color = addon.Config.GetColor("shieldCornerColor")
+    self.corner:SetSize(cornerSize, cornerSize)
+    self.corner:ClearAllPoints()
+    self.corner:SetPoint(cornerPosition, self.frame, cornerPosition, 0, 0)
+    self.corner:SetTexCoord(coordinates[1], coordinates[2], coordinates[3], coordinates[4])
+    self.corner:SetVertexColor(color[1], color[2], color[3], color[4])
+
     if not addon.Config.Get("stanceIconEnabled") then
         self:SetPreview(false)
     end
     self.frame:SetShown(addon.Config.Get("stanceIconEnabled"))
+    self:Refresh()
 end
 
 function Icon:Refresh()
@@ -97,6 +119,12 @@ function Icon:Refresh()
     end
 
     self.texture:SetTexture(texture or unknownTexture)
+
+    if addon.Config.Get("shieldCornerEnabled") and addon.Client.HasShield() then
+        self.corner:Show()
+    else
+        self.corner:Hide()
+    end
 end
 
 function Icon:SetPreview(enabled)
