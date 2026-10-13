@@ -40,7 +40,7 @@ H.equal(frame.events.UPDATE_SHAPESHIFT_FORM, true)
 H.equal(frame.events.PLAYER_EQUIPMENT_CHANGED, true, "equipment swaps refresh shield corner")
 H.equal(icon.corner:IsShown(), true, "confirmed shield shows the corner in Battle Stance")
 H.equal(icon.corner.path, "Interface\\AddOns\\WarriorAssistForever\\Media\\ShieldCorner.tga")
-H.equal(icon.corner.width, 16, "default corner scales to one quarter of 64-pixel stance icon")
+H.equal(icon.corner.width, 24, "default corner is 50 percent larger on a 64-pixel stance icon")
 H.equal(icon.corner.point[1], "TOPLEFT")
 H.equal(icon.corner.vertexColor[1], 148 / 255, "default corner is purple")
 
@@ -80,15 +80,15 @@ H.equal(icon.texture.path, "Interface\\Icons\\INV_Misc_QuestionMark", "restricte
 world.combat = false
 local settings = addon.SettingsPanel.settings
 settings.stanceIconSize:SetValue(16)
-H.equal(icon.corner.width, 4, "small stance icons keep a proportional corner")
+H.equal(icon.corner.width, 6, "small stance icons keep a proportional corner")
 
 settings.stanceIconSize:SetValue(128)
-H.equal(icon.corner.width, 32, "large stance icons keep a proportional corner")
+H.equal(icon.corner.width, 48, "large stance icons keep a proportional corner")
 
 settings.stanceIconSize:SetValue(36)
 H.equal(frame.width, 36)
 H.equal(frame.height, 36)
-H.equal(icon.corner.width, 9, "corner follows configured stance icon size")
+H.equal(icon.corner.width, 13.5, "corner follows configured stance icon size")
 H.equal(world.env.WarriorAssistForeverDB.stanceIconSize, 36)
 
 settings.shieldCornerPosition:SetValue("TOPRIGHT")

@@ -7,7 +7,7 @@ The addon does not cast spells or change bindings.
 
 ## Installation
 
-Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.8.0.zip`.
+Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.8.1.zip`.
 Extract the ZIP into the client's `Interface/AddOns` directory so the manifest is
 `Interface/AddOns/WarriorAssistForever/WarriorAssistForever.toc`. Enable Warrior
 Assist Forever in the AddOns list and log in or reload. LibStub and LibCustomGlow,
@@ -38,7 +38,7 @@ When a shield is confirmed equipped, a small filled corner appears on the
 stance icon, including outside combat and without a target. It is purple at
 the top left by default. The **Current Stance** settings let you turn the
 corner off, pick its color, and place it at any of the four corners. Its size
-is one quarter of the chosen stance icon size, so it scales with that icon.
+is 37.5% of the chosen stance icon size, so it scales with that icon.
 No corner appears when a shield is absent or its equipment data is unreadable.
 
 Overpower, Revenge, Execute, Victory Rush, and Shield Block each have their own enable toggle, action bar,
@@ -275,7 +275,7 @@ lua tests/reactive_spells.lua
 lua tests/reactive_feature.lua
 python3 tests/package.py
 python3 scripts/package.py
-python3 -m zipfile -l dist/WarriorAssistForever-0.8.0.zip
+python3 -m zipfile -l dist/WarriorAssistForever-0.8.1.zip
 ```
 
 The integration check loads the actual bundled LibStub and LibCustomGlow with WoW

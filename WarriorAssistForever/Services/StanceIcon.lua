@@ -86,7 +86,7 @@ function Icon:ApplySettings()
     self.frame:SetSize(size, size)
     position(self.frame)
 
-    local cornerSize = size / 4
+    local cornerSize = size * 3 / 8
     local cornerPosition = addon.Config.Get("shieldCornerPosition")
     local coordinates = cornerCoordinates[cornerPosition]
     local color = addon.Config.GetColor("shieldCornerColor")
