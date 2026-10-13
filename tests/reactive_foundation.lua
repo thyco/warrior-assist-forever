@@ -26,6 +26,11 @@ H.equal(addon.Config.Get("victoryRushBar"), 0)
 H.equal(addon.Config.Get("victoryRushButton"), 1)
 H.equal(addon.Config.Get("victoryRushNativeColor"), true)
 H.equal(addon.Config.Get("victoryRushGlowColor"), "ffffd24a")
+H.equal(addon.Config.Get("shieldBlockEnabled"), true)
+H.equal(addon.Config.Get("shieldBlockBar"), 0)
+H.equal(addon.Config.Get("shieldBlockButton"), 1)
+H.equal(addon.Config.Get("shieldBlockNativeColor"), true)
+H.equal(addon.Config.Get("shieldBlockGlowColor"), "ffffd24a")
 H.equal(addon.Config.Get("battleShoutEnabled"), true)
 
 local saved = H.new()
@@ -47,6 +52,11 @@ saved.env.WarriorAssistForeverDB = {
     victoryRushButton = 8,
     victoryRushNativeColor = false,
     victoryRushGlowColor = "ff112233",
+    shieldBlockEnabled = false,
+    shieldBlockBar = 5,
+    shieldBlockButton = 7,
+    shieldBlockNativeColor = false,
+    shieldBlockGlowColor = "ff445566",
 }
 local savedAddon = load(saved)
 
@@ -69,6 +79,11 @@ H.equal(savedAddon.Config.Get("victoryRushBar"), 4)
 H.equal(savedAddon.Config.Get("victoryRushButton"), 8)
 H.equal(savedAddon.Config.Get("victoryRushNativeColor"), false)
 H.equal(savedAddon.Config.Get("victoryRushGlowColor"), "ff112233")
+H.equal(savedAddon.Config.Get("shieldBlockEnabled"), false)
+H.equal(savedAddon.Config.Get("shieldBlockBar"), 5)
+H.equal(savedAddon.Config.Get("shieldBlockButton"), 7)
+H.equal(savedAddon.Config.Get("shieldBlockNativeColor"), false)
+H.equal(savedAddon.Config.Get("shieldBlockGlowColor"), "ff445566")
 
 local invalid = H.new()
 local secretBar = 5
@@ -87,6 +102,9 @@ invalid.env.WarriorAssistForeverDB = {
     victoryRushButton = 0,
     victoryRushGlowColor = "invalid",
     victoryRushCombatOnly = "off",
+    shieldBlockBar = 9,
+    shieldBlockButton = 0,
+    shieldBlockGlowColor = "invalid",
 }
 local invalidAddon = load(invalid)
 
@@ -103,11 +121,15 @@ H.equal(invalidAddon.Config.Get("victoryRushBar"), 0)
 H.equal(invalidAddon.Config.Get("victoryRushButton"), 1)
 H.equal(invalidAddon.Config.Get("victoryRushGlowColor"), "ffffd24a")
 H.equal(invalidAddon.Config.Get("victoryRushCombatOnly"), true)
+H.equal(invalidAddon.Config.Get("shieldBlockBar"), 0)
+H.equal(invalidAddon.Config.Get("shieldBlockButton"), 1)
+H.equal(invalidAddon.Config.Get("shieldBlockGlowColor"), "ffffd24a")
 H.equal(pcall(invalidAddon.Config.Set, "overpowerBar", 9), false)
 H.equal(pcall(invalidAddon.Config.Set, "revengeButton", 13), false)
 H.equal(pcall(invalidAddon.Config.Set, "overpowerButton", secretButton), false)
 H.equal(pcall(invalidAddon.Config.Set, "executeButton", 13), false)
 H.equal(pcall(invalidAddon.Config.Set, "victoryRushButton", 13), false)
+H.equal(pcall(invalidAddon.Config.Set, "shieldBlockButton", 13), false)
 
 local positions = {
     { "ActionButton", "Action bar 1" },
@@ -168,6 +190,43 @@ world.env.GetShapeshiftFormID = function() error("restricted") end
 H.equal(addon.Stance.Current(), "unknown")
 
 world.env.GetShapeshiftFormID = function() return 17 end
+
+-- Shield detection must confirm the offhand item type, not just an occupied slot.
+do
+    local shieldWorld = H.new()
+    local offhandID = 12345
+    local offhandType = "INVTYPE_SHIELD"
+    shieldWorld.env.GetInventoryItemID = function(unit, slot)
+        H.equal(unit, "player")
+        H.equal(slot, 17)
+
+        return offhandID
+    end
+    shieldWorld.env.C_Item = {
+        GetItemInfoInstant = function(itemID)
+            H.equal(itemID, 12345)
+
+            return itemID, "Armor", "Shields", offhandType
+        end,
+    }
+
+    local shieldAddon = load(shieldWorld)
+    H.equal(shieldAddon.Client.HasShield(), true, "equipped shield is confirmed")
+
+    offhandType = "INVTYPE_HOLDABLE"
+    H.equal(shieldAddon.Client.HasShield(), false, "non-shield offhand stays dark")
+
+    offhandID = nil
+    H.equal(shieldAddon.Client.HasShield(), false, "empty offhand stays dark")
+
+    offhandID = 12345
+    offhandType = "INVTYPE_SHIELD"
+    shieldWorld.secret[offhandType] = true
+    H.equal(shieldAddon.Client.HasShield(), false, "secret item type stays dark")
+
+    shieldWorld.env.C_Item.GetItemInfoInstant = function() error("restricted") end
+    H.equal(shieldAddon.Client.HasShield(), false, "item API errors stay dark")
+end
 world.secret[17] = true
 
 H.equal(addon.Stance.Current(), "unknown")

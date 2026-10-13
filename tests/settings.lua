@@ -18,7 +18,7 @@ do
     end)
 
     H.equal(addon.SettingsPanel.category.name, "Warrior Assist Forever")
-    H.equal(#addon.SettingsPanel.sections, 6)
+    H.equal(#addon.SettingsPanel.sections, 7)
     H.equal(addon.SettingsPanel.controls.battleShoutEnabled.checked, true)
     H.equal(#addon.SettingsPanel.controls.leadSeconds.options, 60)
     H.equal(addon.SettingsPanel.controls.leadSeconds.options[1].value, 1)
@@ -55,7 +55,9 @@ do
         "executeEnabled", "executeBar", "executeButton",
         "executeNativeColor", "executeGlowColor",
         "victoryRushEnabled", "victoryRushBar", "victoryRushButton",
-        "victoryRushNativeColor", "victoryRushGlowColor", "victoryRushCombatOnly" }
+        "victoryRushNativeColor", "victoryRushGlowColor", "victoryRushCombatOnly",
+        "shieldBlockEnabled", "shieldBlockBar", "shieldBlockButton",
+        "shieldBlockNativeColor", "shieldBlockGlowColor" }
 
     for _, key in ipairs(keys) do
         assert(world.settings["WarriorAssistForever_" .. key], key .. " setting missing")
@@ -67,14 +69,17 @@ do
     H.equal(world.settings.WarriorAssistForever_executeEnabled:GetValue(), true)
     H.equal(world.settings.WarriorAssistForever_victoryRushEnabled:GetValue(), true)
     H.equal(world.settings.WarriorAssistForever_victoryRushCombatOnly:GetValue(), true)
+    H.equal(world.settings.WarriorAssistForever_shieldBlockEnabled:GetValue(), true)
     H.equal(world.settings.WarriorAssistForever_overpowerBar:GetValue(), 0)
     H.equal(world.settings.WarriorAssistForever_revengeBar:GetValue(), 0)
     H.equal(world.settings.WarriorAssistForever_executeBar:GetValue(), 0)
     H.equal(world.settings.WarriorAssistForever_victoryRushBar:GetValue(), 0)
+    H.equal(world.settings.WarriorAssistForever_shieldBlockBar:GetValue(), 0)
     H.equal(world.settings.WarriorAssistForever_overpowerButton:GetValue(), 1)
     H.equal(world.settings.WarriorAssistForever_revengeButton:GetValue(), 1)
     H.equal(world.settings.WarriorAssistForever_executeButton:GetValue(), 1)
     H.equal(world.settings.WarriorAssistForever_victoryRushButton:GetValue(), 1)
+    H.equal(world.settings.WarriorAssistForever_shieldBlockButton:GetValue(), 1)
     H.equal(addon.SettingsPanel.controls.overpowerBar.options[1].label, "Not selected")
     H.equal(#addon.SettingsPanel.controls.overpowerBar.options, 9)
     H.equal(#addon.SettingsPanel.controls.revengeButton.options, 12)
@@ -91,6 +96,9 @@ do
     world.settings.WarriorAssistForever_victoryRushButton:SetValue(9)
     world.settings.WarriorAssistForever_victoryRushNativeColor:SetValue(false)
     world.settings.WarriorAssistForever_victoryRushCombatOnly:SetValue(false)
+    world.settings.WarriorAssistForever_shieldBlockBar:SetValue(4)
+    world.settings.WarriorAssistForever_shieldBlockButton:SetValue(6)
+    world.settings.WarriorAssistForever_shieldBlockNativeColor:SetValue(false)
 
     H.equal(world.env.WarriorAssistForeverDB.overpowerBar, 3)
     H.equal(world.env.WarriorAssistForeverDB.overpowerButton, 4)
@@ -105,6 +113,9 @@ do
     H.equal(world.env.WarriorAssistForeverDB.victoryRushButton, 9)
     H.equal(world.env.WarriorAssistForeverDB.victoryRushNativeColor, false)
     H.equal(world.env.WarriorAssistForeverDB.victoryRushCombatOnly, false)
+    H.equal(world.env.WarriorAssistForeverDB.shieldBlockBar, 4)
+    H.equal(world.env.WarriorAssistForeverDB.shieldBlockButton, 6)
+    H.equal(world.env.WarriorAssistForeverDB.shieldBlockNativeColor, false)
     H.equal(addon.SettingsPanel.controls.revengeBar.text, "Action bar 5")
     H.equal(addon.SettingsPanel.controls.overpowerBattleNativeColor.checked, true)
     H.equal(addon.SettingsPanel.controls.overpowerBerserkerNativeColor.checked, true)
@@ -112,6 +123,7 @@ do
     H.equal(addon.SettingsPanel.controls.executeNativeColor.checked, false)
     H.equal(addon.SettingsPanel.controls.victoryRushNativeColor.checked, false)
     H.equal(addon.SettingsPanel.controls.victoryRushCombatOnly.checked, false)
+    H.equal(addon.SettingsPanel.controls.shieldBlockNativeColor.checked, false)
 end
 
 -- The stance color picker persists a selection and Cancel restores it.
@@ -256,7 +268,7 @@ do
 
     world.env.SlashCmdList.WARRIORASSISTFOREVER("")
     local result = table.concat(world.printed, "\n")
-    assert(result:find("Warrior Assist Forever 0.6.1 / client 16001 / Warrior active", 1, true))
+    assert(result:find("Warrior Assist Forever 0.7.0 / client 16001 / Warrior active", 1, true))
     assert(result:find("Enabled: true / lead: 10s", 1, true))
     assert(result:find("Battle Shout: unknown / none / due in unknown", 1, true))
     assert(result:find("Reminder: none", 1, true))

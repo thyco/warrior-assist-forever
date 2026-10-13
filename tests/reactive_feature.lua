@@ -26,16 +26,17 @@ local function setup(options)
     }
     world.env.C_SpellBook = {
         GetNumSpellBookSkillLines = function() return 1 end,
-        GetSpellBookSkillLineInfo = function() return { itemIndexOffset = 0, numSpellBookItems = 4 } end,
+        GetSpellBookSkillLineInfo = function() return { itemIndexOffset = 0, numSpellBookItems = 5 } end,
         GetSpellBookItemInfo = function(index)
             return { itemType = 1, isPassive = false, isOffSpec = false,
                 spellID = index == 1 and 7384 or (index == 2 and 6572 or
-                    (index == 3 and 5308 or 402927)) }
+                    (index == 3 and 5308 or (index == 4 and 402927 or 2565))) }
         end,
     }
     world.env.C_Spell.GetSpellInfo = function(id)
         local names = { [7384] = "Overpower", [6572] = "Revenge",
-            [5308] = "Execute", [402927] = "Victory Rush", [6673] = "Battle Shout" }
+            [5308] = "Execute", [402927] = "Victory Rush", [2565] = "Shield Block",
+            [6673] = "Battle Shout" }
         return names[id] and { name = names[id] }
     end
     world.env.C_Spell.IsSpellUsable = function(id)
@@ -81,10 +82,92 @@ local function setupVictoryRush()
     end)
 end
 
+local function setupShieldBlock()
+    return setup(function(world)
+        world.env.WarriorAssistForeverDB.shieldBlockBar = 1
+        world.env.WarriorAssistForeverDB.shieldBlockButton = 5
+        world.shieldBlockButton = world:newFrame()
+        world.env.ActionButton5 = world.shieldBlockButton
+        world.offhandID = 12345
+        world.offhandType = "INVTYPE_SHIELD"
+        world.env.GetInventoryItemID = function(unit, slot)
+            H.equal(unit, "player")
+            H.equal(slot, 17)
+
+            return world.offhandID
+        end
+        world.env.C_Item = {
+            GetItemInfoInstant = function(itemID)
+                H.equal(itemID, 12345)
+
+                return itemID, "Armor", "Shields", world.offhandType
+            end,
+        }
+        world.usable[2565] = true
+        world.cooldowns[2565] = { startTime = 0, duration = 0,
+            isActive = false, isEnabled = true }
+    end)
+end
+
 local function reactiveEvent(world, event, ...)
     local frame = world.addon.ReactiveAbilities.frame
     assert(frame.events[event] == true, "event must be registered: " .. event)
     frame.scripts.OnEvent(frame, event, ...)
+end
+
+-- Shield Block requires combat, Defensive Stance, a shield, and a ready own cooldown.
+do
+    local world, addon = setupShieldBlock()
+
+    world.stanceID = 18
+    reactiveEvent(world, "UPDATE_SHAPESHIFT_FORM")
+    H.equal(world.glowActive[world.shieldBlockButton], false, "out-of-combat Shield Block stays dark")
+
+    world.combat = true
+    reactiveEvent(world, "PLAYER_REGEN_DISABLED")
+    H.equal(world.glowActive[world.shieldBlockButton], true, "defensive shield in combat glows")
+    H.equal(world.glowActive[world.revengeButton], true, "Shield Block keeps its own button")
+
+    world.offhandType = "INVTYPE_HOLDABLE"
+    reactiveEvent(world, "PLAYER_EQUIPMENT_CHANGED")
+    H.equal(world.glowActive[world.shieldBlockButton], false, "non-shield offhand clears glow")
+
+    world.offhandType = "INVTYPE_SHIELD"
+    reactiveEvent(world, "PLAYER_EQUIPMENT_CHANGED")
+    H.equal(world.glowActive[world.shieldBlockButton], true, "re-equipping shield restores glow")
+
+    world.stanceID = 17
+    reactiveEvent(world, "UPDATE_SHAPESHIFT_FORM")
+    H.equal(world.glowActive[world.shieldBlockButton], false, "Battle Stance suppresses Shield Block")
+
+    world.stanceID = 18
+    world.usable[2565] = false
+    world.insufficientPower[2565] = true
+    reactiveEvent(world, "SPELL_UPDATE_USABLE")
+    H.equal(world.glowActive[world.shieldBlockButton], true, "low rage does not suppress Shield Block")
+
+    world.insufficientPower[2565] = false
+    reactiveEvent(world, "SPELL_UPDATE_USABLE")
+    H.equal(world.glowActive[world.shieldBlockButton], false, "other unusable reasons suppress glow")
+
+    world.usable[2565] = true
+    world.cooldowns[2565] = { startTime = 100, duration = 30,
+        isActive = true, isEnabled = true }
+    reactiveEvent(world, "SPELL_UPDATE_COOLDOWN")
+    H.equal(world.glowActive[world.shieldBlockButton], false, "own cooldown suppresses glow")
+
+    world.cooldowns[2565] = { startTime = 100, duration = 1.5,
+        isActive = true, isEnabled = true }
+    world.cooldowns[61304] = { startTime = 100, duration = 1.5, isActive = true }
+    reactiveEvent(world, "SPELL_UPDATE_COOLDOWN")
+    H.equal(world.glowActive[world.shieldBlockButton], true, "GCD does not suppress Shield Block")
+
+    world.env.SlashCmdList.WARRIORASSISTFOREVER("")
+    local diagnostics = table.concat(world.printed, "\n")
+    assert(diagnostics:find("Shield Block: learned / ready / usable / ready / bar 1 button 5 / glow active", 1, true))
+
+    addon.Config.Set("shieldBlockEnabled", false)
+    H.equal(world.glowActive[world.shieldBlockButton], false, "disabling Shield Block clears glow")
 end
 
 -- Victory Rush glows only in combat with true usability and a ready own cooldown.
@@ -637,6 +720,24 @@ do
 
     addon.Config.Set("victoryRushNativeColor", true)
     H.equal(world.glows[entry.frame].color, nil, "Victory Rush restores native glow")
+end
+
+-- Shield Block supports the same native and custom glow choice as other abilities.
+do
+    local world, addon = setupShieldBlock()
+    world.stanceID = 18
+    world.combat = true
+    reactiveEvent(world, "PLAYER_REGEN_DISABLED")
+
+    local entry = addon.Glow.Prepare(world.shieldBlockButton)
+    H.equal(world.glows[entry.frame].color, nil, "Shield Block defaults to native glow")
+
+    addon.Config.Set("shieldBlockNativeColor", false)
+    addon.Config.Set("shieldBlockGlowColor", "ff0000ff")
+    H.equal(world.glows[entry.frame].color[3], 1, "Shield Block uses selected blue")
+
+    addon.Config.Set("shieldBlockNativeColor", true)
+    H.equal(world.glows[entry.frame].color, nil, "Shield Block restores native glow")
 end
 
 print("reactive feature: PASS")

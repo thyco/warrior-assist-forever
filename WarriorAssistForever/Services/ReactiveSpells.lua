@@ -1,10 +1,11 @@
 local _, addon = ...
-local ReactiveSpells = { ids = { overpower = {}, revenge = {}, execute = {}, victoryRush = {} },
+local ReactiveSpells = { ids = { overpower = {}, revenge = {}, execute = {},
+    victoryRush = {}, shieldBlock = {} },
     gcdOnly = {} }
 addon.ReactiveSpells = ReactiveSpells
 
 local seeds = { overpower = 7384, revenge = 6572, execute = 5308,
-    victoryRush = 402927 }
+    victoryRush = 402927, shieldBlock = 2565 }
 local gcdEvidenceSeconds = 1.6
 
 local function read(api, ...)
@@ -52,8 +53,10 @@ end
 
 function ReactiveSpells.Rebuild()
     local names = {}
-    local seen = { overpower = {}, revenge = {}, execute = {}, victoryRush = {} }
-    ReactiveSpells.ids = { overpower = {}, revenge = {}, execute = {}, victoryRush = {} }
+    local seen = { overpower = {}, revenge = {}, execute = {},
+        victoryRush = {}, shieldBlock = {} }
+    ReactiveSpells.ids = { overpower = {}, revenge = {}, execute = {},
+        victoryRush = {}, shieldBlock = {} }
     ReactiveSpells.gcdOnly = {}
 
     for kind, seed in pairs(seeds) do

@@ -90,7 +90,7 @@ local function diagnostics()
         and string.format("%.1fs", math.max(0, deadline - now)) or "unknown"
     local warrior = addon.Client.IsWarrior() and "active" or "inactive"
 
-    print("Warrior Assist Forever 0.6.1 / client 16001 / Warrior " .. warrior)
+    print("Warrior Assist Forever 0.7.0 / client 16001 / Warrior " .. warrior)
     print("Enabled: " .. tostring(addon.Config.Get("battleShoutEnabled"))
         .. " / lead: " .. addon.Config.Get("leadSeconds") .. "s")
     print("Battle Shout: " .. label(aura.state, auraStates, "unknown")
@@ -103,6 +103,7 @@ local function diagnostics()
     reactiveDiagnostics("revenge", "Revenge", member(reactive, "revenge"))
     reactiveDiagnostics("execute", "Execute", member(reactive, "execute"))
     reactiveDiagnostics("victoryRush", "Victory Rush", member(reactive, "victoryRush"))
+    reactiveDiagnostics("shieldBlock", "Shield Block", member(reactive, "shieldBlock"))
 end
 
 SLASH_WARRIORASSISTFOREVER1 = "/waf"

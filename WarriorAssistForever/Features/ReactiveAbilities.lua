@@ -4,6 +4,7 @@ addon.ReactiveAbilities = ReactiveAbilities
 
 local executeStyle = { native = "executeNativeColor", custom = "executeGlowColor" }
 local victoryRushStyle = { native = "victoryRushNativeColor", custom = "victoryRushGlowColor" }
+local shieldBlockStyle = { native = "shieldBlockNativeColor", custom = "shieldBlockGlowColor" }
 local definitions = {
     overpower = { owner = "overpower", enabled = "overpowerEnabled",
         bar = "overpowerBar", button = "overpowerButton",
@@ -28,14 +29,20 @@ local definitions = {
         modes = { battle = "usable", defensive = "usable", berserker = "usable" },
         colors = { battle = victoryRushStyle, defensive = victoryRushStyle,
             berserker = victoryRushStyle } },
+    shieldBlock = { owner = "shieldBlock", enabled = "shieldBlockEnabled",
+        bar = "shieldBlockBar", button = "shieldBlockButton",
+        requiresCombat = true, requiresShield = true,
+        modes = { defensive = "usable" },
+        colors = { defensive = shieldBlockStyle } },
 }
-local order = { "overpower", "revenge", "execute", "victoryRush" }
+local order = { "overpower", "revenge", "execute", "victoryRush", "shieldBlock" }
 local events = {
     "UPDATE_SHAPESHIFT_FORM", "SPELL_UPDATE_USABLE", "SPELL_UPDATE_COOLDOWN",
     "SPELL_ACTIVATION_OVERLAY_GLOW_SHOW", "SPELL_ACTIVATION_OVERLAY_GLOW_HIDE",
     "SPELLS_CHANGED", "PLAYER_TALENT_UPDATE", "SPELL_DATA_LOAD_RESULT",
     "PLAYER_ENTERING_WORLD", "PLAYER_LEAVING_WORLD", "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED",
     "ACTIONBAR_PAGE_CHANGED", "ACTIONBAR_SLOT_CHANGED", "ACTIONBAR_UPDATE_STATE",
+    "PLAYER_EQUIPMENT_CHANGED",
 }
 local rebuildEvents = {
     SPELLS_CHANGED = true,
@@ -154,7 +161,9 @@ function ReactiveAbilities:Refresh()
         local combatAllowed = not definition.combatOnly
             or not addon.Config.Get(definition.combatOnly) or addon.Client.InCombat()
         if addon.Config.Get(definition.enabled) and mode and shown
-            and combatAllowed then
+            and combatAllowed
+            and (not definition.requiresCombat or addon.Client.InCombat())
+            and (not definition.requiresShield or addon.Client.HasShield()) then
             local result = addon.ReactiveSpells.Evaluate(kind, mode)
             status.ready = result.ready
             status.signal = result.signal
@@ -203,10 +212,12 @@ function ReactiveAbilities:Stop()
 
     self.buttons = {}
     self.status = { stance = "unknown", overpower = emptyStatus(),
-        revenge = emptyStatus(), execute = emptyStatus(), victoryRush = emptyStatus() }
+        revenge = emptyStatus(), execute = emptyStatus(), victoryRush = emptyStatus(),
+        shieldBlock = emptyStatus() }
 end
 
 function ReactiveAbilities:Status()
     return self.status or { stance = "unknown", overpower = emptyStatus(),
-        revenge = emptyStatus(), execute = emptyStatus(), victoryRush = emptyStatus() }
+        revenge = emptyStatus(), execute = emptyStatus(), victoryRush = emptyStatus(),
+        shieldBlock = emptyStatus() }
 end

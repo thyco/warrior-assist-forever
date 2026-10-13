@@ -38,6 +38,11 @@ local defaults = {
     victoryRushButton = 1,
     victoryRushNativeColor = true,
     victoryRushGlowColor = "ffffd24a",
+    shieldBlockEnabled = true,
+    shieldBlockBar = 0,
+    shieldBlockButton = 1,
+    shieldBlockNativeColor = true,
+    shieldBlockGlowColor = "ffffd24a",
 }
 local values
 local listeners = {}
@@ -48,6 +53,7 @@ local colorKeys = {
     revengeGlowColor = true,
     executeGlowColor = true,
     victoryRushGlowColor = true,
+    shieldBlockGlowColor = true,
 }
 
 local function validValue(key, value)
@@ -60,12 +66,12 @@ local function validValue(key, value)
     end
 
     if key == "overpowerBar" or key == "revengeBar" or key == "executeBar"
-        or key == "victoryRushBar" then
+        or key == "victoryRushBar" or key == "shieldBlockBar" then
         return value >= 0 and value <= 8 and value == math.floor(value)
     end
 
     if key == "overpowerButton" or key == "revengeButton" or key == "executeButton"
-        or key == "victoryRushButton" then
+        or key == "victoryRushButton" or key == "shieldBlockButton" then
         return value >= 1 and value <= 12 and value == math.floor(value)
     end
 

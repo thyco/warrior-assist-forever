@@ -30,6 +30,31 @@ function Client.Boolean(value)
     end
 end
 
+function Client.HasShield()
+    if not Client.Readable(GetInventoryItemID)
+        or type(GetInventoryItemID) ~= "function" then
+        return false
+    end
+
+    local itemOK, itemID = pcall(GetInventoryItemID, "player", 17)
+    if not itemOK or not Client.Number(itemID) or itemID <= 0 then
+        return false
+    end
+
+    if not Client.Readable(C_Item) or type(C_Item) ~= "table" then
+        return false
+    end
+
+    local apiOK, itemInfo = pcall(function() return C_Item.GetItemInfoInstant end)
+    if not apiOK or not Client.Readable(itemInfo) or type(itemInfo) ~= "function" then
+        return false
+    end
+
+    local infoOK, _, _, _, equipLocation = pcall(itemInfo, itemID)
+    return infoOK and Client.Readable(equipLocation)
+        and equipLocation == "INVTYPE_SHIELD"
+end
+
 function Client.PlayerSpells()
     local spells = {}
     if not Client.Readable(C_SpellBook) or not Client.Readable(Enum)

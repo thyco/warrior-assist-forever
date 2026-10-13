@@ -10,7 +10,7 @@ local function setup(learned)
     world.cooldowns = {}
     world.names = { [7384] = "Frappe dominante", [6572] = "Revanche",
         [11584] = "Frappe dominante", [5308] = "Exécution", [20658] = "Exécution",
-        [402927] = "Ruée victorieuse" }
+        [402927] = "Ruée victorieuse", [2565] = "Maîtrise du blocage" }
     world.time = 100
     world.env.Enum = {
         SpellBookSpellBank = { Player = 0 },
@@ -176,6 +176,30 @@ local unlearnedVictoryWorld, unlearnedVictory = setup({ 6572 })
 unlearnedVictoryWorld.usable[402927] = true
 status = unlearnedVictory.Evaluate("victoryRush", "usable")
 H.equal(status.ready, false, "unlearned Victory Rush cannot glow")
+
+local shieldWorld, shieldSpells = setup({ 2565 })
+shieldWorld.usable[2565] = true
+shieldWorld.cooldowns[2565] = { startTime = 0, duration = 0,
+    isActive = false, isEnabled = true }
+
+status = shieldSpells.Evaluate("shieldBlock", "usable")
+H.equal(status.learned, true, "learned Shield Block is found by localized name")
+H.equal(status.ready, true, "usable Shield Block with no own cooldown is ready")
+
+shieldWorld.usable[2565] = false
+shieldWorld.insufficientPower[2565] = true
+status = shieldSpells.Evaluate("shieldBlock", "usable")
+H.equal(status.ready, true, "low rage does not hide Shield Block")
+
+shieldWorld.cooldowns[2565] = { startTime = 95, duration = 30,
+    isActive = true, isEnabled = true }
+status = shieldSpells.Evaluate("shieldBlock", "usable")
+H.equal(status.ready, false, "own cooldown blocks Shield Block")
+
+local unlearnedShieldWorld, unlearnedShield = setup({ 6572 })
+unlearnedShieldWorld.usable[2565] = true
+status = unlearnedShield.Evaluate("shieldBlock", "usable")
+H.equal(status.ready, false, "unlearned Shield Block stays dark")
 
 local rageWorld, rageSpells = setup()
 rageWorld.usable[7384] = false
