@@ -6,7 +6,19 @@ from pathlib import Path
 
 SIZE = 64
 SAMPLES = 4
+ROUND_RADIUS = 8
 DESTINATION = Path(__file__).resolve().parents[1] / "WarriorAssistForever/Media/ShieldCorner.tga"
+
+
+def covered(x, y):
+    if x + y >= SIZE:
+        return False
+
+    if x >= ROUND_RADIUS or y >= ROUND_RADIUS:
+        return True
+
+    return ((x - ROUND_RADIUS) ** 2 + (y - ROUND_RADIUS) ** 2
+            <= ROUND_RADIUS ** 2)
 
 
 def main():
@@ -20,13 +32,13 @@ def main():
     pixels = bytearray()
     for y in range(SIZE):
         for x in range(SIZE):
-            covered = sum(
-                x + (sample_x + 0.5) / SAMPLES
-                + y + (sample_y + 0.5) / SAMPLES < SIZE
+            samples_covered = sum(
+                covered(x + (sample_x + 0.5) / SAMPLES,
+                        y + (sample_y + 0.5) / SAMPLES)
                 for sample_y in range(SAMPLES)
                 for sample_x in range(SAMPLES)
             )
-            alpha = round(255 * covered / (SAMPLES * SAMPLES))
+            alpha = round(255 * samples_covered / (SAMPLES * SAMPLES))
             pixels.extend((255, 255, 255, alpha))
 
     DESTINATION.write_bytes(header + pixels)

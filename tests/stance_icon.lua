@@ -42,7 +42,11 @@ H.equal(icon.corner:IsShown(), true, "confirmed shield shows the corner in Battl
 H.equal(icon.corner.path, "Interface\\AddOns\\WarriorAssistForever\\Media\\ShieldCorner.tga")
 H.equal(icon.corner.width, 24, "default corner is 50 percent larger on a 64-pixel stance icon")
 H.equal(icon.corner.point[1], "TOPLEFT")
-H.equal(icon.corner.vertexColor[1], 148 / 255, "default corner is purple")
+H.equal(icon.corner.point[4], 4, "corner starts inside the silver border")
+H.equal(icon.corner.point[5], -4)
+H.equal(icon.corner.vertexColor[1], 0, "default shield corner is green")
+H.equal(icon.corner.vertexColor[2], 1)
+H.equal(icon.corner.vertexColor[3], 0)
 
 world.offhandID = nil
 frame.scripts.OnEvent(frame, "PLAYER_EQUIPMENT_CHANGED")
@@ -81,9 +85,11 @@ world.combat = false
 local settings = addon.SettingsPanel.settings
 settings.stanceIconSize:SetValue(16)
 H.equal(icon.corner.width, 6, "small stance icons keep a proportional corner")
+H.equal(icon.corner.point[4], 1, "border inset scales with a small stance icon")
 
 settings.stanceIconSize:SetValue(128)
 H.equal(icon.corner.width, 48, "large stance icons keep a proportional corner")
+H.equal(icon.corner.point[4], 8, "border inset scales with a large stance icon")
 
 settings.stanceIconSize:SetValue(36)
 H.equal(frame.width, 36)
@@ -93,14 +99,20 @@ H.equal(world.env.WarriorAssistForeverDB.stanceIconSize, 36)
 
 settings.shieldCornerPosition:SetValue("TOPRIGHT")
 H.equal(icon.corner.point[1], "TOPRIGHT")
+H.equal(icon.corner.point[4], -2.25)
+H.equal(icon.corner.point[5], -2.25)
 H.equal(icon.corner.texCoords[1], 1, "top-right corner mirrors the triangle")
 
 settings.shieldCornerPosition:SetValue("BOTTOMLEFT")
 H.equal(icon.corner.point[1], "BOTTOMLEFT")
+H.equal(icon.corner.point[4], 2.25)
+H.equal(icon.corner.point[5], 2.25)
 H.equal(icon.corner.texCoords[3], 1, "bottom-left corner mirrors vertically")
 
 settings.shieldCornerPosition:SetValue("BOTTOMRIGHT")
 H.equal(icon.corner.point[1], "BOTTOMRIGHT")
+H.equal(icon.corner.point[4], -2.25)
+H.equal(icon.corner.point[5], 2.25)
 H.equal(icon.corner.texCoords[1], 1)
 H.equal(icon.corner.texCoords[3], 1)
 
@@ -191,8 +203,15 @@ malformed.env.WarriorAssistForeverDB = {
 local malformedAddon = malformed:loadManifest()
 malformed:fire("PLAYER_LOGIN")
 H.equal(malformedAddon.Config.Get("shieldCornerEnabled"), true)
-H.equal(malformedAddon.Config.Get("shieldCornerColor"), "ff9461df")
+H.equal(malformedAddon.Config.Get("shieldCornerColor"), "ff00ff00")
 H.equal(malformedAddon.Config.Get("shieldCornerPosition"), "TOPLEFT")
 H.equal(pcall(malformedAddon.Config.Set, "shieldCornerPosition", "CENTER"), false)
+
+local savedPurple = H.new()
+savedPurple.env.WarriorAssistForeverDB = { shieldCornerColor = "ff9461df" }
+local savedPurpleAddon = savedPurple:loadManifest()
+savedPurple:fire("PLAYER_LOGIN")
+H.equal(savedPurpleAddon.Config.Get("shieldCornerColor"), "ff9461df",
+    "the previous purple value remains when already saved")
 
 print("stance icon: PASS")

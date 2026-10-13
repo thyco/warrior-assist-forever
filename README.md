@@ -7,7 +7,7 @@ The addon does not cast spells or change bindings.
 
 ## Installation
 
-Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.8.1.zip`.
+Run `python3 scripts/package.py` to build `dist/WarriorAssistForever-0.8.2.zip`.
 Extract the ZIP into the client's `Interface/AddOns` directory so the manifest is
 `Interface/AddOns/WarriorAssistForever/WarriorAssistForever.toc`. Enable Warrior
 Assist Forever in the AddOns list and log in or reload. LibStub and LibCustomGlow,
@@ -35,10 +35,12 @@ moving it from settings. During normal play, the world map covers the stance
 icon where they overlap.
 
 When a shield is confirmed equipped, a small filled corner appears on the
-stance icon, including outside combat and without a target. It is purple at
-the top left by default. The **Current Stance** settings let you turn the
-corner off, pick its color, and place it at any of the four corners. Its size
-is 37.5% of the chosen stance icon size, so it scales with that icon.
+stance icon, including outside combat and without a target. It is green
+(#00ff00) at the top left by default on new installs. Existing saved colors
+remain unchanged. The **Current Stance** settings let you turn the corner off,
+pick its color, and place it at any of the four corners. Its size is 37.5% of
+the chosen stance icon size, and it sits just inside the silver icon border
+with a rounded outer corner. Both its size and border inset scale with the icon.
 No corner appears when a shield is absent or its equipment data is unreadable.
 
 Overpower, Revenge, Execute, Victory Rush, and Shield Block each have their own enable toggle, action bar,
@@ -233,8 +235,9 @@ These checks remain required; no WoW Forever client was available for local test
     and re-enable it from settings and check that the Battle Shout icon keeps its
     own size and position. Open the world map over the stance icon; the map
     should cover it until you close the map. Equip a shield and confirm the
-    purple corner appears; remove it and confirm the corner disappears. Change
-    the corner color and all four positions, resize the stance icon, then reload
+    green corner appears inside the silver border; remove the shield and confirm
+    the corner disappears. Change the corner color and all four positions,
+    resize the stance icon, then reload
     and confirm those choices persist. The corner should also update while in
     combat without changing stance.
 12. Select a separate Victory Rush button in `/waf config`. With **Only show in
@@ -275,7 +278,7 @@ lua tests/reactive_spells.lua
 lua tests/reactive_feature.lua
 python3 tests/package.py
 python3 scripts/package.py
-python3 -m zipfile -l dist/WarriorAssistForever-0.8.1.zip
+python3 -m zipfile -l dist/WarriorAssistForever-0.8.2.zip
 ```
 
 The integration check loads the actual bundled LibStub and LibCustomGlow with WoW

@@ -44,9 +44,15 @@ with tempfile.TemporaryDirectory() as temporary:
         assert int.from_bytes(corner[14:16], "little") == 64
         assert corner[16] == 32 and corner[17] == 0x28
         assert len(corner) == 18 + 64 * 64 * 4
-        assert corner[21] == 255 and corner[-1] == 0, (
-            "triangle has opaque top-left and transparent bottom-right"
+
+        def alpha_at(x, y):
+            return corner[18 + (y * 64 + x) * 4 + 3]
+
+        assert alpha_at(0, 0) == 0 and alpha_at(8, 8) == 255, (
+            "triangle has a rounded outer corner and an opaque interior"
         )
+        assert alpha_at(63, 63) == 0, "triangle stays transparent outside its diagonal"
+
         for entry in ("Features/ReactiveAbilities.lua", "Services/Buttons.lua",
                       "Services/Stance.lua", "Services/ReactiveSpells.lua"):
             assert "WarriorAssistForever/" + entry in names

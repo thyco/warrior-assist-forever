@@ -87,12 +87,15 @@ function Icon:ApplySettings()
     position(self.frame)
 
     local cornerSize = size * 3 / 8
+    local cornerInset = size / 16
     local cornerPosition = addon.Config.Get("shieldCornerPosition")
     local coordinates = cornerCoordinates[cornerPosition]
     local color = addon.Config.GetColor("shieldCornerColor")
+    local offsetX = cornerPosition:find("LEFT", 1, true) and cornerInset or -cornerInset
+    local offsetY = cornerPosition:find("TOP", 1, true) and -cornerInset or cornerInset
     self.corner:SetSize(cornerSize, cornerSize)
     self.corner:ClearAllPoints()
-    self.corner:SetPoint(cornerPosition, self.frame, cornerPosition, 0, 0)
+    self.corner:SetPoint(cornerPosition, self.frame, cornerPosition, offsetX, offsetY)
     self.corner:SetTexCoord(coordinates[1], coordinates[2], coordinates[3], coordinates[4])
     self.corner:SetVertexColor(color[1], color[2], color[3], color[4])
 

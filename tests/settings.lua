@@ -38,7 +38,7 @@ do
     H.equal(addon.SettingsPanel.controls.shieldCornerEnabled.checked, true)
     H.equal(addon.SettingsPanel.controls.shieldCornerPosition.selectedValue, "TOPLEFT")
     H.equal(#addon.SettingsPanel.controls.shieldCornerPosition.options, 4)
-    H.equal(addon.Config.Get("shieldCornerColor"), "ff9461df")
+    H.equal(addon.Config.Get("shieldCornerColor"), "ff00ff00")
     H.equal(addon.StanceIcon.frame, nil, "non-Warrior has no stance icon")
 
     H.equal(world.env.SLASH_WARRIORASSISTFOREVER1, "/waf")
@@ -272,7 +272,7 @@ do
 
     world.env.SlashCmdList.WARRIORASSISTFOREVER("")
     local result = table.concat(world.printed, "\n")
-    assert(result:find("Warrior Assist Forever 0.8.1 / client 16001 / Warrior active", 1, true))
+    assert(result:find("Warrior Assist Forever 0.8.2 / client 16001 / Warrior active", 1, true))
     assert(result:find("Enabled: true / lead: 10s", 1, true))
     assert(result:find("Battle Shout: unknown / none / due in unknown", 1, true))
     assert(result:find("Reminder: none", 1, true))
